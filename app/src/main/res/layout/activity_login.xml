@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/layout_bg"
+    tools:context=".Login">
+    <TextView
+        android:textColor="@color/white"
+        android:id="@+id/loginTv"
+        android:layout_width="164dp"
+        android:layout_height="65dp"
+        android:gravity="center"
+        android:text="Login"
+        android:textAppearance="@android:style/TextAppearance.Large"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.201" />
+
+
+
+    <TextView
+        android:id="@+id/emailtv_lg"
+        style="@style/TextViewForm"
+        android:layout_marginTop="72dp"
+        android:gravity="center_vertical"
+        android:labelFor="@id/email_edt_lg"
+        android:paddingStart="30px"
+        android:text="Email"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.131"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/loginTv" />
+
+
+    <EditText
+        style="@style/MyEditTextStyle"
+        android:id="@+id/email_edt_lg"
+        android:ems="10"
+        android:hint="Enter your email..."
+        android:inputType="text|textEmailAddress"
+        android:paddingStart="30px"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.382"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/emailtv_lg" />
+
+
+    <TextView
+        android:id="@+id/pw_tv_lg"
+        style="@style/TextViewForm"
+        android:layout_marginTop="16dp"
+        android:labelFor="@id/pw_edt_lg"
+        android:paddingStart="30px"
+        android:text="Password"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.127"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/email_edt_lg" />
+
+    <EditText
+        android:id="@+id/pw_edt_lg"
+        android:ems="10"
+        style="@style/MyEditTextStyle"
+        android:hint="Enter your password..."
+        android:inputType="textEmailAddress"
+        android:paddingStart="30px"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.372"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pw_tv_lg" />
+
+    <Button
+        android:id="@+id/login_btn"
+        android:layout_width="177dp"
+        android:layout_height="64dp"
+        android:layout_marginTop="44dp"
+        android:text="Login"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pw_edt_lg" />
+
+    <TextView
+        android:id="@+id/signUptv"
+        android:layout_width="115dp"
+        android:layout_height="28dp"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:text="Sign Up"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.501"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/login_btn" />
+</androidx.constraintlayout.widget.ConstraintLayout>
