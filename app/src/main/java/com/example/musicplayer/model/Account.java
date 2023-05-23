@@ -1,4 +1,4 @@
-package com.example.musicplayer;
+package com.example.musicplayer.model;
 
 import android.content.Context;
 import android.content.Intent;

@@ -8,7 +8,7 @@
     tools:context=".SignUp">
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/exploration_tv"
         android:layout_width="164dp"
         android:layout_height="65dp"
         android:layout_marginTop="76dp"
@@ -31,7 +31,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.112"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2"
+        app:layout_constraintTop_toBottomOf="@+id/exploration_tv"
         android:labelFor="@+id/uname_edt"/>
 
     <EditText

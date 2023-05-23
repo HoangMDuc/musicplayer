@@ -12,6 +12,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.musicplayer.model.Account;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 

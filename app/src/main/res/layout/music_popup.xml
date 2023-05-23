@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+
+    android:background="@color/white"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
+
+        <ImageView
+            android:id="@+id/music_image"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:scaleType="fitXY"
+            tools:srcCompat="@tools:sample/avatars" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/musicname_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="TextView"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/music_s_name_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="TextView"
+                android:textColor="@color/text_hint_color"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider" />
+
+    <LinearLayout
+        android:id="@+id/download_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="5dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
+
+        <ImageView
+            android:id="@+id/download_btn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="@android:color/transparent"
+            android:scaleType="fitXY"
+            app:srcCompat="@mipmap/download_white" />
+
+        <TextView
+            android:id="@+id/textView12"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:text="Tải về"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/like_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="5dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
+
+        <androidx.constraintlayout.utils.widget.ImageFilterButton
+            android:id="@+id/like_btn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="@android:color/transparent"
+            android:scaleType="fitXY"
+            app:srcCompat="@drawable/baseline_favorite_24" />
+
+        <TextView
+            android:id="@+id/textView13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:layout_weight="1"
+            android:text="Thêm vào bài hát yêu thích"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/add_playlist_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="5dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
+
+        <androidx.constraintlayout.utils.widget.ImageFilterButton
+            android:id="@+id/add_playlist_btn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="@android:color/transparent"
+            android:scaleType="fitXY"
+            app:srcCompat="@drawable/playlist_add_dark" />
+
+        <TextView
+            android:id="@+id/textView14"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:layout_weight="1"
+            android:text="Thêm vào playlist"
+            android:textSize="16sp" />
+    </LinearLayout>
+</LinearLayout>

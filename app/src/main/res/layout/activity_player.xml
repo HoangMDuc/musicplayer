@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/add_playing__to_playlist"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/back_btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@android:color/transparent"
+            android:scaleType="fitXY"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/outline_chevron_left_24" />
+
+        <ImageButton
+            android:id="@+id/imageButton4"
+            android:layout_width="28dp"
+            android:layout_height="30dp"
+            android:background="@android:color/transparent"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:scaleType="fitXY"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ellipsis_vertical_solid" />
+
+        <TextView
+            android:id="@+id/textView11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Đang nghe"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toStartOf="@+id/imageButton4"
+            app:layout_constraintHorizontal_bias="0.474"
+            app:layout_constraintStart_toEndOf="@+id/back_btn"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ImageView
+
+        android:id="@+id/music_playing_image"
+        android:layout_width="350dp"
+        android:layout_height="350dp"
+
+        android:layout_marginTop="12dp"
+        android:scaleType="fitXY"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayout2"
+        app:srcCompat="@drawable/baseline_play_circle_24">
+
+
+    </ImageView>
+
+    <ImageButton
+        android:id="@+id/like_playing_music"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="42dp"
+        android:layout_marginEnd="16dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/music_playing_image"
+        app:srcCompat="@drawable/baseline_favorite_24" />
+
+    <ImageButton
+        android:id="@+id/imageButton6"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="42dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/music_playing_image"
+        app:srcCompat="@drawable/baseline_share_24" />
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="36dp"
+        android:layout_marginEnd="16dp"
+        android:background="@color/white"
+        android:backgroundTint="@android:color/transparent"
+        android:max="0"
+        android:paddingStart="0dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="0dp"
+        android:paddingBottom="4dp"
+        android:thumb="@drawable/baseline_circle_24"
+        android:thumbTintMode="src_atop"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="22dp"
+        android:layout_marginEnd="20dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toStartOf="@+id/like_playing_music"
+        app:layout_constraintHorizontal_bias="0.312"
+        app:layout_constraintStart_toEndOf="@+id/imageButton6"
+        app:layout_constraintTop_toBottomOf="@+id/music_playing_image">
+
+        <TextView
+            android:id="@+id/music_playing_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="Đây là tên bài hát"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/music_playing_singer_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đây là tên ca sĩ"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/currentTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="0:00"
+        android:textColor="@color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/seekBar" />
+
+    <TextView
+        android:id="@+id/music_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:text="5:00"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/seekBar" />
+
+    <ImageButton
+        android:id="@+id/shuffle_music_btn"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="32dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/currentTime"
+        app:srcCompat="@drawable/baseline_shuffle_24" />
+
+    <ImageButton
+        android:id="@+id/repeat_music_btn"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="16dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/music_time"
+        app:srcCompat="@drawable/baseline_repeat_24" />
+
+    <ImageButton
+        android:id="@+id/pause_and_play"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="22dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintEnd_toStartOf="@+id/next_music_btn"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toEndOf="@+id/previous_music_btn"
+        app:layout_constraintTop_toBottomOf="@+id/currentTime"
+        app:srcCompat="@drawable/baseline_play_circle_24" />
+
+    <ImageButton
+        android:id="@+id/previous_music_btn"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="22dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintStart_toEndOf="@+id/shuffle_music_btn"
+        app:layout_constraintTop_toBottomOf="@+id/currentTime"
+        app:srcCompat="@drawable/baseline_skip_previous_24" />
+
+    <ImageButton
+        android:id="@+id/next_music_btn"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="22dp"
+        android:layout_marginEnd="48dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintEnd_toStartOf="@+id/repeat_music_btn"
+        app:layout_constraintTop_toBottomOf="@+id/music_time"
+        app:srcCompat="@drawable/baseline_skip_next_24" />
+
+    <ImageButton
+        android:id="@+id/chat_btn"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="32dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/baseline_chat_bubble_outline_24" />
+
+    <ImageButton
+        android:id="@+id/playlist_btn"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="32dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/outline_queue_music_24" />
+
+    <ImageButton
+        android:id="@+id/add_music_playing_to_playlist"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginStart="80dp"
+        android:layout_marginBottom="32dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/chat_btn"
+        app:srcCompat="@drawable/playlist_add_24" />
+
+    <ImageButton
+        android:id="@+id/download_playing_music"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginStart="80dp"
+        android:layout_marginBottom="32dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/add_music_playing_to_playlist"
+        app:srcCompat="@drawable/download_white" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

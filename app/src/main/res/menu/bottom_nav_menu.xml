@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/library"
+        android:title="Thư viện"
+        android:icon="@mipmap/thuvien"/>
+    <item
+        android:id="@+id/exploration"
+        android:title="Khám phá"
+        android:icon="@mipmap/khampha"/>
+    <item
+        android:id="@+id/zingchart"
+        android:title="#zingchart"
+        android:icon="@mipmap/zingchart"/>
+<!--    <item-->
+<!--        android:id="@+id/radio"-->
+<!--        android:title="radio"-->
+<!--        android:icon="@mipmap/radio"/>-->
+<!--    <item-->
+<!--        android:id="@+id/follow"-->
+<!--        android:title="Follow"-->
+<!--        android:icon="@mipmap/newsfeed"/>-->
+
+</menu>
