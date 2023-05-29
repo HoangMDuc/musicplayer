@@ -97,7 +97,7 @@ public class ZingChartFragment extends Fragment {
             @Override
             public void run() {
 
-                ZingChartAdapter adapter = new ZingChartAdapter(tredingMusics,sharedPreferences );
+                ZingChartAdapter adapter = new ZingChartAdapter(getActivity(),tredingMusics,sharedPreferences );
                 RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.zingchart_rcv);
                 recyclerView.setHasFixedSize(true);
                 recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));

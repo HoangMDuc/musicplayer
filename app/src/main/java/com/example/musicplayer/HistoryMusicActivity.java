@@ -42,7 +42,7 @@ public class HistoryMusicActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     if(listData.size() > 0 ) {
-                        HistorySongAdapter adapter = new HistorySongAdapter(listData,sharedPreferences);
+                        HistorySongAdapter adapter = new HistorySongAdapter(HistoryMusicActivity.this,listData,sharedPreferences);
                         music_list.setHasFixedSize(true);
                         music_list.setLayoutManager(new LinearLayoutManager(getBaseContext()));
                         music_list.setAdapter(adapter);

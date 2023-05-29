@@ -32,7 +32,7 @@ public class LoginActivity extends AppCompatActivity {
     SharedPreferences sharedPreferences;
     EditText emailEdt,pwEdt;
     AccountImp accountImp;
-    TextView signUp;
+    TextView signUp,tvOffline;
     Button loginBtn;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +40,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
         signUp = (TextView) findViewById(R.id.signUptv);
+        tvOffline = findViewById(R.id.tvOffline);
         signUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -67,6 +68,12 @@ public class LoginActivity extends AppCompatActivity {
                         Toast.makeText(getBaseContext(), "Mật khẩu phải có ít nhất 6 ký tự!", Toast.LENGTH_SHORT).show();
                     }
                 }
+            }
+        });
+        tvOffline.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(LoginActivity.this, DownloadedMusicActivity.class));
             }
         });
      }

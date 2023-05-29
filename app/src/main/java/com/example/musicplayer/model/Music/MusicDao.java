@@ -14,4 +14,6 @@ public interface MusicDao {
     public CompletableFuture<ArrayList<Music>> getTopFavoriteMusic();
     public CompletableFuture<ArrayList<Music>> getTopMillionViewMusic();
     public CompletableFuture<ArrayList<Music>> getTopBillionViewMusic();
+
+    public ArrayList<Music> getSearchMusic(String text);
 }

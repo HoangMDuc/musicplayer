@@ -1,9 +1,17 @@
 package com.example.musicplayer.adapter;
 
+import static com.example.musicplayer.MainActivity.PERMISSION_REQUEST_CODE;
+import static com.example.musicplayer.MainActivity.StartDownload;
+import static com.example.musicplayer.MainActivity.selectedMusic;
+
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
@@ -21,6 +29,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -38,6 +47,8 @@ import java.util.ArrayList;
 
 public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapter.ViewHolder> {
     private ArrayList<Music> listData;
+
+    private Activity activity;
     PlayListImp pli;
     PlayListAdapter playListAdapter;
     TextView sg_tv,mn_tv,tv_like;
@@ -45,11 +56,13 @@ public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapte
     PopupWindow popupWindow;
     ImageView music_image;
 
+    LinearLayout download_btn;
+
     SharedPreferences sharedPreferences;
-    public FavoriteSongAdapter(ArrayList<Music> listData , SharedPreferences sharedPreferences) {
+    public FavoriteSongAdapter(Activity activity,ArrayList<Music> listData , SharedPreferences sharedPreferences) {
         this.listData = listData;
         this.sharedPreferences = sharedPreferences;
-
+        this.activity = activity;
     }
 
     @NonNull
@@ -92,6 +105,8 @@ public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapte
                 like_btn = (ImageButton) view1.findViewById(R.id.like_btn);
                 add_playlist_btn = (ImageButton) view1.findViewById(R.id.add_playlist_btn);
 
+                download_btn = view1.findViewById(R.id.download_layout);
+
                 tv_like.setText("Xóa khỏi danh sách yêu thích");
                 sg_tv.setText(myMusic.getName_singer());
                 mn_tv.setText(myMusic.getName_music());
@@ -101,6 +116,20 @@ public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapte
                 int height = ViewGroup.LayoutParams.WRAP_CONTENT;
                 popupWindow = new PopupWindow(view1,width, height, true);
                 popupWindow.showAtLocation(view.getRootView(), Gravity.BOTTOM, 0, 0);
+
+                download_btn.setOnClickListener(v -> {
+                    selectedMusic = myMusic;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (ContextCompat.checkSelfPermission(v.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    PERMISSION_REQUEST_CODE);
+                        } else {
+                            StartDownload(activity, myMusic.getSrc_music(),myMusic);
+                        }
+                    } else {
+                        StartDownload(activity, myMusic.getSrc_music(), myMusic);
+                    }
+                });
                 like_btn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

@@ -65,7 +65,7 @@ public class PlayListActivity extends AppCompatActivity {
         name_list.setText(playList.getName_list());
         Picasso.get().load(playList.getImage_list()).into(image_list);
         if(playList.getArray_music().size() > 0) {
-            playListSongAdapter = new PlayListSongAdapter(playList.getArray_music(),sharedPreferences, playList.get_id());
+            playListSongAdapter = new PlayListSongAdapter(this,playList.getArray_music(),sharedPreferences, playList.get_id());
             playListSongAdapter.setOnItemClickListener(new PlayListSongAdapter.OnItemClickListener() {
                 @Override
                 public void onItemClick(int position) {

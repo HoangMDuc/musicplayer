@@ -1,8 +1,16 @@
 package com.example.musicplayer.adapter;
 
+import static com.example.musicplayer.MainActivity.PERMISSION_REQUEST_CODE;
+import static com.example.musicplayer.MainActivity.StartDownload;
+import static com.example.musicplayer.MainActivity.selectedMusic;
+
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
@@ -19,6 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -42,10 +51,12 @@ public class PlayListSongAdapter extends RecyclerView.Adapter<PlayListSongAdapte
     private PopupWindow popupWindow;
     private SharedPreferences sharedPreferences;
     private OnItemClickListener  listener;
+    private Activity activity;
     LinearLayout remove_from_playlist;
     TextView sg_tv,mn_tv,favorite_tv;
     ImageView music_image;
-    ImageButton download_btn, like_btn, add_playlist_btn;
+    ImageButton  like_btn, add_playlist_btn;
+    LinearLayout download_btn;
     public interface OnItemClickListener {
         void onItemClick(int position);
     }
@@ -58,10 +69,11 @@ public class PlayListSongAdapter extends RecyclerView.Adapter<PlayListSongAdapte
     public ArrayList<Music> getListData() {
         return  listData;
     }
-    public PlayListSongAdapter(ArrayList<Music> listData, SharedPreferences sharedPreferences, String id) {
+    public PlayListSongAdapter(Activity activity,ArrayList<Music> listData, SharedPreferences sharedPreferences, String id) {
         this.listData = listData;
         this.sharedPreferences = sharedPreferences;
         this.id = id;
+        this.activity = activity;
 
     }
 
@@ -91,14 +103,15 @@ public class PlayListSongAdapter extends RecyclerView.Adapter<PlayListSongAdapte
         });
         holder.option_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                LayoutInflater inflater = (LayoutInflater) v.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            public void onClick(View view) {
+                LayoutInflater inflater = (LayoutInflater) view.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 View view1 = inflater.inflate(R.layout.music_popup, null);
                 sg_tv = (TextView) view1.findViewById(R.id.music_s_name_tv);
                 mn_tv = (TextView) view1.findViewById(R.id.musicname_tv);
                 favorite_tv = (TextView) view1.findViewById(R.id.favorite_tv);
                 music_image = (ImageView) view1.findViewById(R.id.song_image);
                 like_btn = (ImageButton) view1.findViewById(R.id.like_btn);
+                download_btn=view1.findViewById(R.id.download_layout);
 
                 remove_from_playlist = (LinearLayout) view1.findViewById(R.id.remove_from_playlist);
                 remove_from_playlist.setVisibility(View.VISIBLE);
@@ -117,7 +130,24 @@ public class PlayListSongAdapter extends RecyclerView.Adapter<PlayListSongAdapte
                 int width = LinearLayout.LayoutParams.MATCH_PARENT;
                 int height = ViewGroup.LayoutParams.WRAP_CONTENT;
                 popupWindow = new PopupWindow(view1,width, height, true);
-                popupWindow.showAtLocation(v.getRootView(), Gravity.BOTTOM, 0, 0);
+                popupWindow.showAtLocation(view.getRootView(), Gravity.BOTTOM, 0, 0);
+
+
+                download_btn.setOnClickListener(v -> {
+                    selectedMusic = myMusic;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (ContextCompat.checkSelfPermission(v.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    PERMISSION_REQUEST_CODE);
+                        } else {
+                            StartDownload(activity, myMusic.getSrc_music(),myMusic);
+                        }
+                    } else {
+                        StartDownload(activity, myMusic.getSrc_music(), myMusic);
+                    }
+                });
+
+
                 like_btn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

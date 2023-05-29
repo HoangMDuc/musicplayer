@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import com.example.musicplayer.DownloadedMusicActivity;
 import com.example.musicplayer.FavoriteMusicActivity;
 import com.example.musicplayer.HistoryMusicActivity;
 import com.example.musicplayer.PlayListActivity;
@@ -152,6 +153,13 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getContext(), HistoryMusicActivity.class);
+                startActivity(intent);
+            }
+        });
+        download.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(), DownloadedMusicActivity.class);
                 startActivity(intent);
             }
         });

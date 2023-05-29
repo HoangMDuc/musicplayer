@@ -3,10 +3,18 @@ package com.example.musicplayer.adapter;
 
 
 
+import static com.example.musicplayer.MainActivity.PERMISSION_REQUEST_CODE;
+import static com.example.musicplayer.MainActivity.StartDownload;
+import static com.example.musicplayer.MainActivity.selectedMusic;
+
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
@@ -21,11 +29,13 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.musicplayer.FavoriteMusicActivity;
+import com.example.musicplayer.MainActivity;
 import com.example.musicplayer.PlayerActivity;
 import com.example.musicplayer.PlaylistsRepository;
 import com.example.musicplayer.R;
@@ -47,12 +57,15 @@ public class ZingChartAdapter extends RecyclerView.Adapter<ZingChartAdapter.View
     private SharedPreferences sharedPreferences;
     TextView sg_tv,mn_tv,favorite_tv;
     ImageView music_image;
-    ImageButton download_btn, like_btn, add_playlist_btn;
+    ImageButton  like_btn, add_playlist_btn;
+    LinearLayout download;
 
+    Activity activity;
     // RecyclerView recyclerView;
-    public ZingChartAdapter(ArrayList<Music> listdata, SharedPreferences sharedPreferences ) {
+    public ZingChartAdapter(Activity activity,ArrayList<Music> listdata, SharedPreferences sharedPreferences ) {
         this.listdata = listdata;
         this.sharedPreferences = sharedPreferences;
+        this.activity = activity;
     }
 
         @Override
@@ -80,6 +93,8 @@ public class ZingChartAdapter extends RecyclerView.Adapter<ZingChartAdapter.View
                 LayoutInflater inflater = (LayoutInflater) view.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 View view1 = inflater.inflate(R.layout.music_popup, null);
 
+
+                download = view1.findViewById(R.id.download_layout);
                 sg_tv = (TextView) view1.findViewById(R.id.music_s_name_tv);
                 mn_tv = (TextView) view1.findViewById(R.id.musicname_tv);
                 favorite_tv = (TextView) view1.findViewById(R.id.favorite_tv);
@@ -94,6 +109,7 @@ public class ZingChartAdapter extends RecyclerView.Adapter<ZingChartAdapter.View
                 }
                 add_playlist_btn = (ImageButton) view1.findViewById(R.id.add_playlist_btn);
 
+
                 sg_tv.setText(myMusic.getName_singer());
                 mn_tv.setText(myMusic.getName_music());
                 Picasso.get().load(myMusic.getImage_music()).into(music_image);
@@ -101,6 +117,23 @@ public class ZingChartAdapter extends RecyclerView.Adapter<ZingChartAdapter.View
                 int height = ViewGroup.LayoutParams.WRAP_CONTENT;
                 popupWindow = new PopupWindow(view1,width, height, true);
                 popupWindow.showAtLocation(view.getRootView(), Gravity.BOTTOM, 0, 0);
+
+
+                download.setOnClickListener(v -> {
+                    selectedMusic = myMusic;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (ContextCompat.checkSelfPermission(v.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    PERMISSION_REQUEST_CODE);
+                        } else {
+                            StartDownload(activity, myMusic.getSrc_music(),myMusic);
+                        }
+                    } else {
+                        StartDownload(activity, myMusic.getSrc_music(), myMusic);
+                    }
+                });
+
+
                 like_btn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

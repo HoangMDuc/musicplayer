@@ -47,7 +47,7 @@ public class FavoriteMusicActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     if(favoriteMusics.size() > 0) {
-                        FavoriteSongAdapter adapter = new FavoriteSongAdapter(favoriteMusics,sharedPreferences);
+                        FavoriteSongAdapter adapter = new FavoriteSongAdapter(FavoriteMusicActivity.this,favoriteMusics,sharedPreferences);
                         favorite_list.setHasFixedSize(true);
                         favorite_list.setLayoutManager(new LinearLayoutManager(getBaseContext()));
                         favorite_list.setAdapter(adapter);

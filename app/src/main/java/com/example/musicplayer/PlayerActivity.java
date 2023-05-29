@@ -1,14 +1,21 @@
 package com.example.musicplayer;
 
+import static com.example.musicplayer.MainActivity.PERMISSION_REQUEST_CODE;
+import static com.example.musicplayer.MainActivity.StartDownload;
+import static com.example.musicplayer.MainActivity.selectedMusic;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.palette.graphics.Palette;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
@@ -471,6 +478,25 @@ public class PlayerActivity extends AppCompatActivity {
                         popupWindow.dismiss();
                     }
                 });
+            }
+        });
+
+        download_btn = (ImageButton) findViewById(R.id.download_playing_music);
+        download_btn.setOnClickListener(v -> {
+            Toast.makeText(getBaseContext(),"clicked",Toast.LENGTH_SHORT).show();
+            selectedMusic = getCurrentSong();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (ContextCompat.checkSelfPermission(v.getContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            PERMISSION_REQUEST_CODE);
+                } else {
+
+                    StartDownload(this, selectedMusic.getSrc_music(), selectedMusic);
+                }
+            } else {
+
+                StartDownload(this, selectedMusic.getSrc_music(), selectedMusic);
             }
         });
     }

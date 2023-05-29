@@ -1,9 +1,17 @@
 package com.example.musicplayer.adapter;
 
+import static com.example.musicplayer.MainActivity.PERMISSION_REQUEST_CODE;
+import static com.example.musicplayer.MainActivity.StartDownload;
+import static com.example.musicplayer.MainActivity.selectedMusic;
+
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
@@ -20,6 +28,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -40,6 +49,7 @@ import java.util.ArrayList;
 
 public class HistorySongAdapter extends RecyclerView.Adapter<HistorySongAdapter.ViewHolder> {
     private ArrayList<Music> listData;
+    private Activity activity;
     PlayListImp pli;
     PlayListAdapter playListAdapter;
     LinearLayout remove_layout;
@@ -48,11 +58,13 @@ public class HistorySongAdapter extends RecyclerView.Adapter<HistorySongAdapter.
     PopupWindow popupWindow;
     ImageView music_image;
 
+    LinearLayout download_btn;
+
     SharedPreferences sharedPreferences;
-    public HistorySongAdapter(ArrayList<Music> listData , SharedPreferences sharedPreferences) {
+    public HistorySongAdapter(Activity activity,ArrayList<Music> listData , SharedPreferences sharedPreferences) {
         this.listData = listData;
         this.sharedPreferences = sharedPreferences;
-
+        this.activity = activity;
     }
 
     @NonNull
@@ -95,6 +107,9 @@ public class HistorySongAdapter extends RecyclerView.Adapter<HistorySongAdapter.
                 like_btn = (ImageButton) view1.findViewById(R.id.like_btn);
                 add_playlist_btn = (ImageButton) view1.findViewById(R.id.add_playlist_btn);
 
+                download_btn = view1.findViewById(R.id.download_layout);
+
+
                 String data = sharedPreferences.getString("favorite_list", "");
                 try {
                     JSONArray jsonArray = new JSONArray(data);
@@ -118,7 +133,19 @@ public class HistorySongAdapter extends RecyclerView.Adapter<HistorySongAdapter.
                 popupWindow = new PopupWindow(view1,width, height, true);
                 popupWindow.showAtLocation(view.getRootView(), Gravity.BOTTOM, 0, 0);
 
-
+                download_btn.setOnClickListener(v -> {
+                    selectedMusic = myMusic;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (ContextCompat.checkSelfPermission(v.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                    PERMISSION_REQUEST_CODE);
+                        } else {
+                            StartDownload(activity, myMusic.getSrc_music(),myMusic);
+                        }
+                    } else {
+                        StartDownload(activity, myMusic.getSrc_music(), myMusic);
+                    }
+                });
 
                 like_btn.setOnClickListener(new View.OnClickListener() {
                     @Override

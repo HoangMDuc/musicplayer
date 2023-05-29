@@ -149,7 +149,7 @@ public class ExploreFragment extends Fragment {
             }
         });
 
-        historySongAdapter = new HistorySongAdapter(newMusics, sharedPreferences);
+        historySongAdapter = new HistorySongAdapter(getActivity(),newMusics, sharedPreferences);
         music_list.setHasFixedSize(true);
         music_list.setLayoutManager(new LinearLayoutManager(getContext()));
         music_list.setAdapter(historySongAdapter);

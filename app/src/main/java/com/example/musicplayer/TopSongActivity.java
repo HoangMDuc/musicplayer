@@ -30,7 +30,7 @@ public class TopSongActivity extends AppCompatActivity {
         name_tv = (TextView) findViewById(R.id.top_list_name);
         name_tv.setText(name);
         recyclerView  = (RecyclerView) findViewById(R.id.top_music_list);
-        historySongAdapter = new HistorySongAdapter(listMusics,sharedPreferences);
+        historySongAdapter = new HistorySongAdapter(TopSongActivity.this,listMusics,sharedPreferences);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
         recyclerView.setAdapter(historySongAdapter);

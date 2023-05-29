@@ -3,16 +3,23 @@ package com.example.musicplayer;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.DownloadManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.example.musicplayer.custom_fragment.ExploreFragment;
 import com.example.musicplayer.custom_fragment.HeaderFragment;
 import com.example.musicplayer.custom_fragment.HomeFragment;
 import com.example.musicplayer.custom_fragment.ZingChartFragment;
+import com.example.musicplayer.model.Music.Music;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 
@@ -86,5 +93,52 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+    }
+    public static Music selectedMusic;
+    public static final int PERMISSION_REQUEST_CODE = 10;
+    public static void StartDownload(Context context, String url, Music music){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("my_preferences", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        if (music.get_id().equals("0")) {
+            Toast.makeText(context.getApplicationContext(), "Bài hát đã được tải xuống thiết bị rồi",Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!sharedPreferences.contains(music.get_id()+" is downdload")) {
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url))
+                    .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI)
+                    .setTitle("Download")
+                    .setDescription("Download file...")
+                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, music.getName_music() + ".mp3");
+            DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+            if (downloadManager != null) {
+                downloadManager.enqueue(request);
+                editor.putInt(music.get_id()+" is downdload",1);
+                editor.apply();
+            }
+        }
+        else {
+            Toast.makeText(context.getApplicationContext(), "Bài hát đã được tải xuống thiết bị rồi",Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Quyền truy cập bộ nhớ ngoài đã được cấp, bắt đầu tải xuống
+                if (selectedMusic != null) {
+                    StartDownload(this,selectedMusic.getSrc_music(),selectedMusic);
+                    selectedMusic = null; // Đặt lại giá trị của biến selectedMusic
+                }
+
+            } else {
+                // Quyền truy cập bộ nhớ ngoài không được cấp, thông báo cho người dùng
+                Toast.makeText(this, "Ứng dụng cần quyền truy cập bộ nhớ để tải xuống.", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

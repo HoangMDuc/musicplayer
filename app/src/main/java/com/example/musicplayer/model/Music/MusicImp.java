@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -465,5 +466,70 @@ public class MusicImp implements MusicDao{
             }
         });
         return future;
+    }
+
+    @Override
+    public ArrayList<Music> getSearchMusic(String text) {
+        ArrayList<Music> List =new ArrayList<Music>();;
+        OkHttpClient client = new OkHttpClient();
+        //  String url = "https://api-kaito-music.vercel.app/api/search?query="+text;
+
+        HttpUrl.Builder urlBuilder = HttpUrl.parse("https://api-kaito-music.vercel.app/api/search").newBuilder();
+        urlBuilder.addQueryParameter("query", text);
+        String url = urlBuilder.build().toString();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                e.printStackTrace();
+                countDownLatch.countDown();
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseData = response.body().string();
+                    try {
+                        JSONObject jsonData = new JSONObject(responseData);
+                        JSONArray dataArray = jsonData.getJSONArray("data");
+                        //JSONObject firstData = dataArray.getJSONObject(0);
+                        if (dataArray.length()>0) {
+                            for (int i = 0; i < dataArray.length(); i++) {
+                                String id = dataArray.getJSONObject(i).getString("_id");
+                                String nameSong = dataArray.getJSONObject(i).getString("name_music");
+                                String nameSinger = dataArray.getJSONObject(i).getString("name_singer");
+                                String src_music = dataArray.getJSONObject(i).getString("src_music");
+                                String imgMusic = dataArray.getJSONObject(i).getString("image_music");
+                                String category = dataArray.getJSONObject(i).getString("category");
+                                String timeformat = dataArray.getJSONObject(i).getString("time_format");
+                                int seconds = dataArray.getJSONObject(i).getInt("seconds");
+                                List.add(new Music(id,nameSong, nameSinger,src_music , imgMusic,category,timeformat,seconds));
+                            }
+
+//                            new Handler(Looper.getMainLooper()).post(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    notifyDataSetChanged();
+//                                }
+//                            });
+
+                        }
+                        countDownLatch.countDown();
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        });
+        try {
+            countDownLatch.await();
+        }catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return List;
     }
 }
