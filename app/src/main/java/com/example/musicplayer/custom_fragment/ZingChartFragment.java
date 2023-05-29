@@ -1,5 +1,7 @@
 package com.example.musicplayer.custom_fragment;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -12,12 +14,13 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.musicplayer.R;
-import com.example.musicplayer.custom_fragment.adapter.ZingChartAdapter;
+import com.example.musicplayer.adapter.ZingChartAdapter;
 
 import com.example.musicplayer.model.Music.Music;
 import com.example.musicplayer.model.Music.MusicImp;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -30,7 +33,7 @@ public class ZingChartFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-
+    SharedPreferences sharedPreferences;
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
@@ -62,15 +65,27 @@ public class ZingChartFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        sharedPreferences = getActivity().getSharedPreferences("my_preferences", Context.MODE_PRIVATE);
         Log.d("Zingchart2", "Created");
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         String zingchartUrl = getString(R.string.api) + "/music/trending";
         musicImp = new MusicImp();
-        tredingMusics = musicImp.getTrendingMusic();
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        musicImp.getTrendingMusic().thenAccept(data -> {
+            tredingMusics = data;
+            countDownLatch.countDown();
+        }).exceptionally( ex -> {
+            ex.printStackTrace();
+            countDownLatch.countDown();
+            return null;
+        });
+       try {
+           countDownLatch.await();
+       }catch (InterruptedException e) {
+           e.printStackTrace();
+       }
+        super.onCreate(savedInstanceState);
+
+
     }
 
     @Override
@@ -78,12 +93,17 @@ public class ZingChartFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_zing_chart, container, false);
         // Inflate the layout for this fragment
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
 
-        ZingChartAdapter adapter = new ZingChartAdapter(tredingMusics );
-        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.zingchart_rcv);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(adapter);
+                ZingChartAdapter adapter = new ZingChartAdapter(tredingMusics,sharedPreferences );
+                RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.zingchart_rcv);
+                recyclerView.setHasFixedSize(true);
+                recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+                recyclerView.setAdapter(adapter);
+            }
+        });
         return view;
     }
 

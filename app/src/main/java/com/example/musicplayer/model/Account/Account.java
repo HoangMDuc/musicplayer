@@ -1,4 +1,4 @@
-package com.example.musicplayer.model;
+package com.example.musicplayer.model.Account;
 
 import android.content.Context;
 import android.content.Intent;
@@ -26,7 +26,7 @@ public class Account {
     private String email;
     private String password;
     private String userName;
-    private final String emailRegex= "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+    private static String emailRegex= "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 
     public Account(String email, String password, String userName) {
         this.email = email;
@@ -57,14 +57,14 @@ public class Account {
     public void setPassword(String password) {
         this.password = password;
     }
-    public boolean isValidUserName() {
+    public static boolean isValidUserName(String userName) {
         return userName.length() >=8;
     }
-    public boolean isValidEmail() {
+    public static boolean isValidEmail(String email) {
         Pattern emailPt = Pattern.compile(emailRegex);
         return emailPt.matcher(email).matches();
     }
-    public boolean isValidPassword() {
+    public static boolean isValidPassword(String password) {
         return password.length() >= 6;
     }
 

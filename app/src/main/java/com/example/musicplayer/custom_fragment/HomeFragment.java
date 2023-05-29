@@ -1,7 +1,7 @@
 package com.example.musicplayer.custom_fragment;
 
-import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
@@ -15,14 +15,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
-import com.example.musicplayer.MainActivity;
+import com.example.musicplayer.FavoriteMusicActivity;
+import com.example.musicplayer.HistoryMusicActivity;
+import com.example.musicplayer.PlayListActivity;
+import com.example.musicplayer.PlaylistsRepository;
 import com.example.musicplayer.R;
-import com.example.musicplayer.custom_fragment.adapter.PlayListAdapter;
+import com.example.musicplayer.adapter.PlayListAdapter;
 
 import com.example.musicplayer.model.PlayList.PlayList;
 import com.example.musicplayer.model.PlayList.PlayListImp;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -44,6 +48,7 @@ public class HomeFragment extends Fragment {
     String playListUrl;
     SharedPreferences sharedPreferences;
     private ArrayList<PlayList> listData;
+    private RecyclerView recyclerView;
 
     public HomeFragment() {
         Log.d("Home Fragment1","Initialize");
@@ -71,27 +76,60 @@ public class HomeFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        sharedPreferences = getContext().getSharedPreferences("my_preferences", Context.MODE_PRIVATE);
+        Log.d("Home Fragment2","Bắt đầu call");
+        pli =new PlayListImp(sharedPreferences.getString("accessToken", "Not found"));
+        pli.getAll().thenAccept(data -> {
+            listData = data;
+            countDownLatch.countDown();
+        }).exceptionally(e -> {
+            e.printStackTrace();
+            countDownLatch.countDown();
+            return null;
+        });
 
+        try {
+            countDownLatch.await();
+        }catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        Log.d("Home Fragment2","Xong");
         super.onCreate(savedInstanceState);
         Log.d("Home Fragment2","Created");
-        playListUrl = getString(R.string.api) + "/list-music/get-list";
-        sharedPreferences = getContext().getSharedPreferences("my_preferences", Context.MODE_PRIVATE);
-        pli =new PlayListImp(sharedPreferences.getString("accessToken", "Not found"), playListUrl);
-        listData = pli.getAll();
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+
+        if(PlaylistsRepository.getPlayLists() != null) {
+            listData = PlaylistsRepository.getPlayLists();
+
+        }
+
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         PlayListAdapter adapter = new PlayListAdapter(listData);
-        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.recyclerView1);
+        adapter.setOnItemClickListener(new PlayListAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+
+                pli = new PlayListImp(sharedPreferences.getString("accessToken",""));
+                pli.getById(listData.get(position).get_id()).thenAccept(data -> {
+                    Intent intent = new Intent(getContext(), PlayListActivity.class);
+                    PlayList playList = data;
+                    intent.putExtra("playlist",playList);
+                    startActivity(intent);
+                }).exceptionally(e -> {
+                    e.printStackTrace();
+                    return null;
+                });
+
+            }
+        });
+        recyclerView = (RecyclerView) view.findViewById(R.id.recyclerView1);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
@@ -103,12 +141,49 @@ public class HomeFragment extends Fragment {
         favorite.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Activity activity = getActivity();
-                MainActivity mainActivity = (MainActivity) activity;
-                Fragment fragment = mainActivity.getSupportFragmentManager().findFragmentById(R.id.MainLayout);
-
+//                Activity activity = getActivity();
+//                MainActivity mainActivity = (MainActivity) activity;
+//                Fragment fragment = mainActivity.getSupportFragmentManager().findFragmentById(R.id.MainLayout);
+                Intent intent = new Intent(getContext(), FavoriteMusicActivity.class);
+                startActivity(intent);
+            }
+        });
+        recently.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(), HistoryMusicActivity.class);
+                startActivity(intent);
             }
         });
         return view;
+    }
+    @Override
+    public void onResume() {
+
+        if(recyclerView != null) {
+            PlayListAdapter adapter = new PlayListAdapter(listData);
+            adapter.setOnItemClickListener(new PlayListAdapter.OnItemClickListener() {
+                @Override
+                public void onItemClick(int position) {
+
+                    pli = new PlayListImp(sharedPreferences.getString("accessToken",""));
+                    pli.getById(listData.get(position).get_id()).thenAccept(data -> {
+                        Intent intent = new Intent(getContext(), PlayListActivity.class);
+                        PlayList playList = data;
+                        intent.putExtra("playlist",playList);
+                        startActivity(intent);
+                    }).exceptionally(e -> {
+                        e.printStackTrace();
+                        return null;
+                    });
+
+                }
+            });
+            recyclerView.setHasFixedSize(true);
+            recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+            recyclerView.setAdapter(adapter);
+        }
+        super.onResume();
+
     }
 }

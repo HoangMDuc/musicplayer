@@ -1,4 +1,4 @@
-package com.example.musicplayer.custom_fragment.adapter;
+package com.example.musicplayer.adapter;
 
 
 //import android.view.LayoutInflater;
@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,11 +30,11 @@ import java.util.ArrayList;
 public class PlayListAdapter extends RecyclerView.Adapter<PlayListAdapter.ViewHolder>{
     private ArrayList<PlayList> listdata;
 
-    private PlaylistSongAdapter.OnItemClickListener listener;
+    private OnItemClickListener listener;
     public interface OnItemClickListener {
         void onItemClick(int position);
     }
-    public void setOnItemClickListener(PlaylistSongAdapter.OnItemClickListener listener) {
+    public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
     }
 

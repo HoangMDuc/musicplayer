@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/layout_bg"
-    tools:context=".Login">
+    tools:context=".LoginActivity">
     <TextView
         android:textColor="@color/white"
         android:id="@+id/loginTv"
@@ -65,10 +65,10 @@
 
     <EditText
         android:id="@+id/pw_edt_lg"
-        android:ems="10"
         style="@style/MyEditTextStyle"
+        android:ems="10"
         android:hint="Enter your password..."
-        android:inputType="textEmailAddress"
+        android:inputType="text|textPassword"
         android:paddingStart="30px"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.372"

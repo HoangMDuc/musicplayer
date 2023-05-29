@@ -2,9 +2,10 @@ package com.example.musicplayer.model.PlayList;
 
 import com.example.musicplayer.model.Music.Music;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class PlayList {
+public class PlayList implements Serializable {
     private String _id,image_list,createdAt,updateAt,id_account,name_list;
     private ArrayList<Music> array_music;
 

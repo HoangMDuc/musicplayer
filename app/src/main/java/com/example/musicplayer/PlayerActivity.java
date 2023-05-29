@@ -1,31 +1,48 @@
 package com.example.musicplayer;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
+import androidx.palette.graphics.Palette;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.DisplayMetrics;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.example.musicplayer.custom_fragment.adapter.PlayListAdapter;
-import com.example.musicplayer.custom_fragment.adapter.PlaylistSongAdapter;
+import com.example.musicplayer.adapter.PlayListAdapter;
+import com.example.musicplayer.adapter.PlayerSongAdapter;
 import com.example.musicplayer.model.Music.Music;
+import com.example.musicplayer.model.Music.MusicImp;
 import com.example.musicplayer.model.PlayList.PlayList;
+import com.example.musicplayer.model.PlayList.PlayListImp;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,15 +53,31 @@ public class PlayerActivity extends AppCompatActivity {
 
     private static ArrayList<Music> listData;
     private static ArrayList<Music> playlist;
-    private PlaylistSongAdapter adapter;
+    private PlayerSongAdapter adapter;
     private PlayListAdapter playListAdapter;
     private static MediaPlayer mediaPlayer = MyMediaPlayer.getMediaPlayer();
     private static int currentIndex = 0;
-    private static boolean isRandom = false, isPlaying = false, isRepeat = false;
+    SharedPreferences sharedPreferences;
+    private static boolean isRandom = false;
+
+    public static boolean isIsRandom() {
+        return isRandom;
+    }
+
+    public static void setIsRandom(boolean isRandom) {
+        PlayerActivity.isRandom = isRandom;
+    }
+
+    private static boolean isPlaying = false;
+    private static boolean isRepeat = false;
     TextView music_name,singer_name,currentTime,totalTime;
     ImageView music_image;
     PopupWindow popupWindow;
-    ImageButton back_previous_activity, random_btn, repeat_btn, playlist_btn,previous_music_btn,next_music_btn,chat_btn,download_btn,add_playlist_btn;
+    ConstraintLayout player;
+    PlayListImp pli;
+    MusicImp mi;
+
+    ImageButton back_previous_activity, random_btn, repeat_btn, playlist_btn,previous_music_btn,next_music_btn,chat_btn,download_btn,add_playlist_btn,like_playing_music;
     SeekBar seekBar;
 //    int x = 0;
     ImageButton pauseAndPlayBtn;
@@ -52,6 +85,12 @@ public class PlayerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
+        sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
+        isPlaying = sharedPreferences.getBoolean("isPlaying", false);
+        isRandom = sharedPreferences.getBoolean("isRandom", false);
+        isRepeat = sharedPreferences.getBoolean("isRepeat", false);
+
+        mi = new MusicImp(sharedPreferences);
         mediaPlayer.reset();
         //get control
         pauseAndPlayBtn = (ImageButton) findViewById(R.id.pause_and_play);
@@ -69,11 +108,11 @@ public class PlayerActivity extends AppCompatActivity {
         previous_music_btn = (ImageButton) findViewById(R.id.previous_music_btn);
         next_music_btn = (ImageButton) findViewById(R.id.next_music_btn);
         add_playlist_btn = (ImageButton) findViewById(R.id.add_music_playing_to_playlist);
+        like_playing_music = (ImageButton) findViewById(R.id.like_playing_music);
+        player = (ConstraintLayout) findViewById(R.id.player);
         // get data
         listData = (ArrayList<Music>) getIntent().getSerializableExtra("ListMusic");
-        if(playlist == null) {
-            playlist = new ArrayList<>(listData);
-        }
+        playlist = new ArrayList<>(listData);
         // get index of Song
         currentIndex = getIntent().getIntExtra("currentIndex", 0);
         //check if random = true then push clicked song to top of playlist
@@ -81,15 +120,20 @@ public class PlayerActivity extends AppCompatActivity {
             Music currentSong = listData.get(currentIndex);
             int currentSongInPlaylist = findMusicInList(playlist,currentSong);
             playlist.remove(currentSongInPlaylist);
+            Collections.shuffle(playlist);
             playlist.add(0,currentSong);
+            currentIndex = 0;
         }
         // set info currentsong
         setCurrentSong();
-        // play audio
         play();
         setRandomImageSource();
         setRepeatImageSource();
-
+        try {
+            setFavoriteImageSource();
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -129,6 +173,22 @@ public class PlayerActivity extends AppCompatActivity {
                 }
             }
         });
+        like_playing_music.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Music currentSong = getCurrentSong();
+                if(sharedPreferences == null) {
+                    sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
+                }
+                mi = new MusicImp(sharedPreferences);
+                mi.toggleLikeMusic(currentSong.get_id());
+               try {
+                   setFavoriteImageSource();
+               }catch (JSONException e) {
+                   e.printStackTrace();
+               }
+            }
+        });
         pauseAndPlayBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -136,6 +196,16 @@ public class PlayerActivity extends AppCompatActivity {
                     pause();
                 }else {
                     resume();
+                }
+                if(sharedPreferences !=  null) {
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("isPlaying",isPlaying);
+                    editor.commit();
+                }else {
+                    sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("isPlaying",isPlaying);
+                    editor.commit();
                 }
             }
         });
@@ -149,7 +219,16 @@ public class PlayerActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 isRepeat = !isRepeat;
-
+                if(sharedPreferences !=  null) {
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("isRepeat",isRepeat);
+                    editor.commit();
+                }else {
+                    sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("isRepeat", isRepeat);
+                    editor.commit();
+                }
                 setRepeatImageSource();
             }
         });
@@ -168,6 +247,16 @@ public class PlayerActivity extends AppCompatActivity {
                     int currentSongInList = findMusicInList(listData,currentSong);
                     currentIndex = currentSongInList;
                     playlist = new ArrayList<>(listData);
+                }
+                if(sharedPreferences !=  null) {
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("isRandom",isRandom);
+                    editor.commit();
+                }else {
+                    sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("isRandom",isRandom);
+                    editor.commit();
                 }
                 setRandomImageSource();
             }
@@ -191,18 +280,97 @@ public class PlayerActivity extends AppCompatActivity {
 
                 LayoutInflater inflater = (LayoutInflater) v.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 View view1 = inflater.inflate(R.layout.add_music_to_playlist_popup, null);
+                LinearLayout createNewPlaylistLayout = (LinearLayout) view1.findViewById(R.id.create_new_playlist);
+                createNewPlaylistLayout.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if(popupWindow != null) {
+                            popupWindow.dismiss();
+                        }
+                        LayoutInflater inflater1 = (LayoutInflater) view.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                        View view2 = inflater1.inflate(R.layout.create_new_playlist, null);
+                        int width = LinearLayout.LayoutParams.MATCH_PARENT;
+                        int height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                        popupWindow = new PopupWindow(view2,width, height, true);
+                        popupWindow.showAtLocation(view.getRootView(), Gravity.CENTER, 0, 0);
+                        EditText playlist_name = (EditText) view2.findViewById(R.id.playlist_name);
+                        TextView submit = (TextView) view2.findViewById(R.id.submit_tv);
+                        TextView cancel = (TextView) view2.findViewById(R.id.cancel_tv);
+                        cancel.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                popupWindow.dismiss();
+                            }
+                        });
+                        submit.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                if(sharedPreferences != null) {
+                                    new PlayListImp(sharedPreferences.getString("accessToken", ""))
+                                            .create(getCurrentSong().get_id(),playlist_name.getText().toString())
+                                            .thenAccept( playList -> {
+                                               runOnUiThread(new Runnable() {
+                                                   @Override
+                                                   public void run() {
+                                                       Toast.makeText(getBaseContext(), "Đã thêm bài hát vào danh sách phát " + playList.getName_list(), Toast.LENGTH_SHORT).show();
+                                                   }
+                                               });
+                                            }).exceptionally(e -> {
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        Toast.makeText(getBaseContext(), "Đã thêm bài hát vào danh sách phát " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                        e.printStackTrace();
+                                                    }
+                                                });
 
+                                                return null;
+                                            });
+                                }
+                                popupWindow.dismiss();
+                            }
+
+                        });
+                        playlist_name.addTextChangedListener(new TextWatcher() {
+                            @Override
+                            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                            }
+                            @Override
+                            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                if(s.length() > 0) {
+                                    submit.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.purple_primary));
+                                    submit.setClickable(true);
+                                }else {
+                                    submit.setTextColor(Color.parseColor("#9E9393"));
+                                    submit.setClickable(false);
+                                }
+                            }
+                            @Override
+                            public void afterTextChanged(Editable s) {
+                            }
+                        });
+                    }
+                });
                 playListAdapter = new PlayListAdapter(PlaylistsRepository.getPlayLists());
-                playListAdapter.setOnItemClickListener(new PlaylistSongAdapter.OnItemClickListener() {
+                playListAdapter.setOnItemClickListener(new PlayListAdapter.OnItemClickListener() {
                     @Override
                     public void onItemClick(int position) {
                         // chỗ này thì thêm bài hát vào playlist;
                         PlayList selectedPlaylist =  PlaylistsRepository.getPlayLists().get(position);
-                        
+                        if(sharedPreferences == null) {
+                            sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
+                        }
+                        pli = new PlayListImp(sharedPreferences.getString("accessToken",""));
+                        Music currentSong = getCurrentSong();
+                        pli.addMusicToPlaylist(selectedPlaylist.get_id(),selectedPlaylist.getName_list(),currentSong.get_id());
+                        Toast.makeText(getBaseContext(),"Đã thêm vào danh sách",Toast.LENGTH_SHORT).show();
+                        if(popupWindow != null) {
+                            popupWindow.dismiss();
+                        }
                     }
                 });
 
-                        RecyclerView recyclerView = (RecyclerView) view1.findViewById(R.id.list_playlist);
+                RecyclerView recyclerView = (RecyclerView) view1.findViewById(R.id.list_playlist);
                 recyclerView.setHasFixedSize(true);
                 recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
                 recyclerView.setAdapter(playListAdapter);
@@ -210,8 +378,8 @@ public class PlayerActivity extends AppCompatActivity {
 
 
                 int width = LinearLayout.LayoutParams.MATCH_PARENT;
-                int height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                popupWindow = new PopupWindow(view1,width, height, true);
+//                int height = ViewGroup.LayoutParams.MATCH_PARENT;
+                popupWindow = new PopupWindow(view1,width, 1000, true);
 //
                 popupWindow.showAtLocation(v.getRootView(), Gravity.BOTTOM, 0, 0);
 
@@ -223,8 +391,8 @@ public class PlayerActivity extends AppCompatActivity {
             public void onClick(View view) {
                 LayoutInflater inflater = (LayoutInflater) view.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 View view1 = inflater.inflate(R.layout.playlist_song_popup, null);
-                adapter = new PlaylistSongAdapter(playlist);
-                adapter.setOnItemClickListener(new PlaylistSongAdapter.OnItemClickListener() {
+                adapter = new PlayerSongAdapter(playlist);
+                adapter.setOnItemClickListener(new PlayerSongAdapter.OnItemClickListener() {
                     @Override
                     public void onItemClick(int position) {
 
@@ -232,7 +400,6 @@ public class PlayerActivity extends AppCompatActivity {
                             currentIndex = position;
                             Music currentSong = getCurrentSong();
                             playlist.remove(position);
-
                             playlist.add(0, currentSong);
                             currentIndex = 0;
                             setCurrentSong();
@@ -250,16 +417,55 @@ public class PlayerActivity extends AppCompatActivity {
                     }
                 });
                 RecyclerView recyclerView = (RecyclerView) view1.findViewById(R.id.playlist_rcv);
+                ConstraintLayout layout = (ConstraintLayout) view1.findViewById(R.id.playlist_song_popup);
+                Picasso.get().load(getCurrentSong().getImage_music()).into(new Target() {
+                    @Override
+                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+
+                        music_image.setImageBitmap(bitmap);
+                        // Tạo palette từ ảnh bitmap
+                        Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
+                            @Override
+                            public void onGenerated(Palette palette) {
+                                // Trích xuất màu chính từ palette
+                                int dominantColor = palette.getDominantColor(0);
+                                int[] gradientColors = {dominantColor, 0xFF000000}; // Màu chính và màu đen
+
+                                // Tạo drawable gradient
+                                GradientDrawable gradientDrawable = new GradientDrawable(
+                                        GradientDrawable.Orientation.TOP_BOTTOM,
+                                        gradientColors
+                                );
+
+                                // Đặt nền gradient cho phần tử container
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                                    layout.setBackground(gradientDrawable);
+                                } else {
+                                    layout.setBackgroundDrawable(gradientDrawable);
+                                }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                        // Xử lý lỗi khi không tải được ảnh
+                    }
+
+                    @Override
+                    public void onPrepareLoad(Drawable placeHolderDrawable) {
+                        // Xử lý trước khi tải ảnh
+                    }
+                });
                 recyclerView.setHasFixedSize(true);
                 recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
                 recyclerView.setAdapter(adapter);
-                ImageButton close = (ImageButton) view1.findViewById(R.id.close_playlist);
-
+                ImageButton back_btn = (ImageButton) view1.findViewById(R.id.back_btn);
                 int width = LinearLayout.LayoutParams.MATCH_PARENT;
                 int height = ViewGroup.LayoutParams.MATCH_PARENT;
                 popupWindow = new PopupWindow(view1,width, height, true);
                 popupWindow.showAtLocation(view.getRootView(), Gravity.BOTTOM, 0, 0);
-                close.setOnClickListener(new View.OnClickListener() {
+                back_btn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         popupWindow.dismiss();
@@ -279,7 +485,45 @@ public class PlayerActivity extends AppCompatActivity {
     private void setCurrentSong() {
 
         //set
-        Picasso.get().load(getCurrentSong().getImage_music()).into(music_image);
+        Picasso.get().load(getCurrentSong().getImage_music()).into(new Target() {
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+
+                music_image.setImageBitmap(bitmap);
+                // Tạo palette từ ảnh bitmap
+                Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
+                    @Override
+                    public void onGenerated(Palette palette) {
+                        // Trích xuất màu chính từ palette
+                        int dominantColor = palette.getDominantColor(0);
+                        int[] gradientColors = {dominantColor, 0xFF000000}; // Màu chính và màu đen
+
+                        // Tạo drawable gradient
+                        GradientDrawable gradientDrawable = new GradientDrawable(
+                                GradientDrawable.Orientation.TOP_BOTTOM,
+                                gradientColors
+                        );
+                        ConstraintLayout constraintLayout = (ConstraintLayout) findViewById(R.id.player);
+                        // Đặt nền gradient cho phần tử container
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                            constraintLayout.setBackground(gradientDrawable);
+                        } else {
+                            constraintLayout.setBackgroundDrawable(gradientDrawable);
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                // Xử lý lỗi khi không tải được ảnh
+            }
+
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {
+                // Xử lý trước khi tải ảnh
+            }
+        });
         music_name.setText(getCurrentSong().getName_music());
         singer_name.setText(getCurrentSong().getName_singer());
         totalTime.setText(getCurrentSong().getTime_format());
@@ -319,8 +563,15 @@ public class PlayerActivity extends AppCompatActivity {
         }
     }
     private  void play(){
+
         mediaPlayer.reset();
         try {
+            setFavoriteImageSource();
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
+        try {
+            mi.addToHistory(getCurrentSong().get_id());
             mediaPlayer.setDataSource(getCurrentSong().getSrc_music());
             mediaPlayer.prepare();
             seekBar.setProgress(0);
@@ -339,6 +590,7 @@ public class PlayerActivity extends AppCompatActivity {
         catch (IOException e) {
             e.printStackTrace();
         }
+
     };
     private void resume() {
         mediaPlayer.start();
@@ -351,6 +603,7 @@ public class PlayerActivity extends AppCompatActivity {
                 }
             });
         }
+
     }
 
     public static String convertToMMSS(String duration){
@@ -384,5 +637,45 @@ public class PlayerActivity extends AppCompatActivity {
 
             }
         });
+
+    }
+
+    private void setFavoriteImageSource() throws JSONException {
+        if(sharedPreferences != null) {
+            Music currentSong = getCurrentSong();
+            JSONArray favoriteArray = new JSONArray(sharedPreferences.getString("favorite_list",""));
+            for(int i = 0 ;i < favoriteArray.length();i++) {
+
+                if(currentSong.get_id().equals(favoriteArray.getString(i))) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            like_playing_music.setImageResource(R.drawable.baseline_favorite_fill_24);
+                        }
+                    });
+                    return;
+
+                }
+            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    like_playing_music.setImageResource(R.drawable.baseline_favorite_24);
+                }
+            });
+
+        }
+    }
+
+    protected void onDestroy() {
+        super.onDestroy();
+        if (popupWindow != null && popupWindow.isShowing()) {
+            popupWindow.dismiss();
+        }
+//        if(mediaPlayer != null) {
+//            mediaPlayer.release();
+//        }
     }
 }

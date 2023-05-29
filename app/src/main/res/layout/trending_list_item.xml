@@ -52,10 +52,12 @@
 
     <ImageButton
         android:id="@+id/options_btn"
-        android:layout_width="20dp"
+        android:layout_width="50dp"
         android:layout_height="30dp"
         android:layout_marginLeft="10dp"
         android:background="@android:color/transparent"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
         android:scaleType="fitXY"
         app:srcCompat="@mipmap/more_vert_icon" />
 </LinearLayout>

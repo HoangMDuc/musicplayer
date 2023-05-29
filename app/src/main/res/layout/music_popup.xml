@@ -19,7 +19,7 @@
         android:paddingBottom="10dp">
 
         <ImageView
-            android:id="@+id/music_image"
+            android:id="@+id/song_image"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:scaleType="fitXY"
@@ -54,6 +54,34 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="?android:attr/listDivider" />
+
+    <LinearLayout
+        android:id="@+id/remove_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="5dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/imageButton5"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="@android:color/transparent"
+            android:scaleType="fitXY"
+            app:srcCompat="@drawable/baseline_remove_circle_outline_24" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_weight="1"
+            android:text="Xóa khỏi lịch sử"
+            android:textSize="16sp" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/download_layout"
@@ -100,10 +128,10 @@
             android:layout_height="30dp"
             android:background="@android:color/transparent"
             android:scaleType="fitXY"
-            app:srcCompat="@drawable/baseline_favorite_24" />
+            app:srcCompat="@drawable/favorite_dark" />
 
         <TextView
-            android:id="@+id/textView13"
+            android:id="@+id/favorite_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="30dp"
@@ -138,6 +166,35 @@
             android:layout_marginStart="30dp"
             android:layout_weight="1"
             android:text="Thêm vào playlist"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/remove_from_playlist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="5dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/imageButton7"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            app:srcCompat="@drawable/baseline_delete_24" />
+
+        <TextView
+            android:id="@+id/textView13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_weight="1"
+            android:text="Xóa bài hát khỏi playlist này"
             android:textSize="16sp" />
     </LinearLayout>
 </LinearLayout>
