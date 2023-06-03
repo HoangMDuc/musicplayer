@@ -1,0 +1,39 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background"
+    android:orientation="vertical">
+
+
+    <ImageButton
+        android:id="@+id/imageCloseMusicUpload"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/background"
+        app:srcCompat="@drawable/outline_chevron_left_24" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="80dp"
+        android:layout_marginTop="10dp"
+        android:text="List Upload Music"
+        android:textColor="@color/white"
+        android:textSize="30dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewMusicUpload"
+        android:layout_width="match_parent"
+        android:layout_marginTop="10dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <Button
+        android:id="@+id/btnPostMusic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Upload new Music" />
+
+</LinearLayout>

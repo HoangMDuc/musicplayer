@@ -30,6 +30,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -39,8 +40,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.musicplayer.adapter.CommentAdapter;
 import com.example.musicplayer.adapter.PlayListAdapter;
 import com.example.musicplayer.adapter.PlayerSongAdapter;
+import com.example.musicplayer.model.Comment.Comment;
+import com.example.musicplayer.model.Comment.CommentImp;
 import com.example.musicplayer.model.Music.Music;
 import com.example.musicplayer.model.Music.MusicImp;
 import com.example.musicplayer.model.PlayList.PlayList;
@@ -116,6 +120,7 @@ public class PlayerActivity extends AppCompatActivity {
         next_music_btn = (ImageButton) findViewById(R.id.next_music_btn);
         add_playlist_btn = (ImageButton) findViewById(R.id.add_music_playing_to_playlist);
         like_playing_music = (ImageButton) findViewById(R.id.like_playing_music);
+        chat_btn =(ImageButton) findViewById(R.id.chat_btn);
         player = (ConstraintLayout) findViewById(R.id.player);
         // get data
         listData = (ArrayList<Music>) getIntent().getSerializableExtra("ListMusic");
@@ -480,6 +485,73 @@ public class PlayerActivity extends AppCompatActivity {
                 });
             }
         });
+        chat_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Music currentSong = getCurrentSong();
+                String id_music = currentSong.get_id();
+                Context context = getApplicationContext();
+
+
+                SharedPreferences sharedPreferences = context.getSharedPreferences("my_preferences", Context.MODE_PRIVATE);
+                CommentImp commentImp =new CommentImp(sharedPreferences.getString("accessToken", "Not found"));
+
+
+                ArrayList<Comment> comment = commentImp.getComment(id_music);
+
+                LayoutInflater inflater = (LayoutInflater) v.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                View view1 = inflater.inflate(R.layout.comment_list, null);
+                View item = inflater.inflate(R.layout.comment_item, null);
+                CommentAdapter commentAdapter = new CommentAdapter(comment);
+
+                RecyclerView recyclerView = (RecyclerView) view1.findViewById(R.id.recyclerViewComment);
+                recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
+                recyclerView.setAdapter(commentAdapter);
+
+                ImageButton close = (ImageButton) view1.findViewById(R.id.imageClose);
+                int width = LinearLayout.LayoutParams.MATCH_PARENT;
+                int height = ViewGroup.LayoutParams.MATCH_PARENT;
+                popupWindow = new PopupWindow(view1,width, height, true);
+                popupWindow.showAtLocation(v.getRootView(), Gravity.BOTTOM, 0, 0);
+                close.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        popupWindow.dismiss();
+                    }
+                });
+
+                EditText textCmt =(EditText) view1.findViewById(R.id.textComment);
+                Button btn_post = (Button) view1.findViewById(R.id.btnPostComment);
+
+                btn_post.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        String cmt = textCmt.getText().toString();
+                        if(cmt.isEmpty()){
+                            Toast.makeText(PlayerActivity.this,"Comment can't emty",Toast.LENGTH_SHORT).show();
+                        }else{
+                            SharedPreferences sharedPreferences = getSharedPreferences("my_preferences", MODE_PRIVATE);
+                            commentImp.create(id_music,cmt);
+                        }
+                    }
+                });
+
+                ImageButton imageButton =(ImageButton) item.findViewById(R.id.imageDelete);
+
+                imageButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        int position = (int) v.getTag();
+
+                        Comment cmt = comment.get(position);
+
+                        Toast.makeText(PlayerActivity.this,cmt.toString(),Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+            }
+        });
+
 
         download_btn = (ImageButton) findViewById(R.id.download_playing_music);
         download_btn.setOnClickListener(v -> {
