@@ -47,6 +47,8 @@ import com.example.musicplayer.model.MusicUpload.MusicUploadImp;
 import com.example.musicplayer.model.PlayList.PlayList;
 import com.example.musicplayer.model.PlayList.PlayListImp;
 
+import org.json.JSONException;
+
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 
@@ -219,7 +221,7 @@ public class HomeFragment extends Fragment {
         upload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MusicUploadImp musicUploadImp =new MusicUploadImp(sharedPreferences.getString("accessToken", "Not found"));
+                MusicUploadImp musicUploadImp =new MusicUploadImp(sharedPreferences.getString("accessToken", "Not found"),getContext());
                 ArrayList<MusicUpload> musicUploads;
                 musicUploads = musicUploadImp.getMusicUpload();
                 LayoutInflater inflater = (LayoutInflater) v.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -309,7 +311,11 @@ public class HomeFragment extends Fragment {
                                 if(name_singer.isEmpty()){
                                     Toast.makeText(requireContext(),"Dont empty",Toast.LENGTH_SHORT).show();
                                 }else {
-                                    musicUploadImp.create(name_singer,imageFilePath,name_music,category,audioFilePath,link_mv);
+                                    try {
+                                        musicUploadImp.create(name_singer,imageFilePath,name_music,category,audioFilePath,link_mv);
+                                    } catch (JSONException e) {
+                                        throw new RuntimeException(e);
+                                    }
                                 }
 
                             }
