@@ -109,6 +109,8 @@
         android:paddingTop="4dp"
         android:paddingEnd="10dp"
         android:paddingBottom="4dp"
+        android:progressBackgroundTint="@color/white"
+        android:progressBackgroundTintMode="src_over"
         android:thumb="@drawable/baseline_circle_24"
         android:thumbTintMode="src_atop"
         app:layout_constraintEnd_toEndOf="parent"

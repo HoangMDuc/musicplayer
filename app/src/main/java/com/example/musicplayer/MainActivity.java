@@ -20,7 +20,7 @@ import android.widget.Toast;
 import com.example.musicplayer.custom_fragment.ExploreFragment;
 import com.example.musicplayer.custom_fragment.HeaderFragment;
 import com.example.musicplayer.custom_fragment.HomeFragment;
-import com.example.musicplayer.custom_fragment.MiniPlayerFragment;
+//import com.example.musicplayer.custom_fragment.MiniPlayerFragment;
 import com.example.musicplayer.custom_fragment.ZingChartFragment;
 import com.example.musicplayer.model.Music.Music;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     com.example.musicplayer.custom_fragment.HeaderFragment HeaderFragment;
     ZingChartFragment zingChartFragment;
     ExploreFragment exploreFragment;
-    MiniPlayerFragment miniPlayerFragment;
+//    MiniPlayerFragment miniPlayerFragment;
     FrameLayout frameLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,16 +103,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        lastPlayedSP = getSharedPreferences("LAST_PLAYED",MODE_PRIVATE);
-
-        int currentIndex = lastPlayedSP.getInt("position", -1);
-        if(currentIndex != -1) {
-            miniPlayerFragment = new MiniPlayerFragment();
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.mini_player,miniPlayerFragment,"MiniPlayer")
-                    .addToBackStack(null)
-                    .commit();
-        }
 
         super.onResume();
     }

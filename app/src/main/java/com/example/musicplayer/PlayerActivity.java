@@ -3,7 +3,7 @@ package com.example.musicplayer;
 import static com.example.musicplayer.MainActivity.PERMISSION_REQUEST_CODE;
 import static com.example.musicplayer.MainActivity.StartDownload;
 import static com.example.musicplayer.MainActivity.selectedMusic;
-import static com.example.musicplayer.custom_fragment.MiniPlayerFragment.setPlayPauseBtnImage;
+//import static com.example.musicplayer.custom_fragment.MiniPlayerFragment.setPlayPauseBtnImage;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -87,18 +87,13 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
     SharedPreferences sharedPreferences;
     public static boolean isShuffle = false, isRepeat = false;
 
-    @Override
-    protected void onRestart() {
-        Toast.makeText(this,"RESTART",Toast.LENGTH_SHORT).show();
-        super.onRestart();
-    }
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
-        Toast.makeText(this,"CREATE",Toast.LENGTH_SHORT).show();
         initViews();
         sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
         isShuffle = sharedPreferences.getBoolean("isRandom", false);
@@ -614,7 +609,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
 
     @Override
     protected void onResume() {
-        Toast.makeText(this,"RESUME",Toast.LENGTH_SHORT).show();
+
         Intent intent = new Intent(this, MusicService.class);
         bindService(intent,this,BIND_AUTO_CREATE);
 
@@ -623,7 +618,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
 
     @Override
     protected void onPause() {
-        Toast.makeText(this,"PAUSE",Toast.LENGTH_SHORT).show();
+
         super.onPause();
         unbindService(this);
     }
@@ -633,11 +628,11 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
     public void playPauseBtnClicked() {
         if(musicService.isPlaying()) {
             playPauseBtn.setImageResource(R.drawable.baseline_play_circle_24);
-            setPlayPauseBtnImage(R.drawable.baseline_play_circle_dark_24);
+//            setPlayPauseBtnImage(R.drawable.baseline_play_circle_dark_24);
             musicService.pause();
         }else {
             playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
-            setPlayPauseBtnImage(R.drawable.baseline_pause_circle_dark_24);
+//            setPlayPauseBtnImage(R.drawable.baseline_pause_circle_dark_24);
             musicService.start();
         }
         musicService.showNotification();
@@ -688,7 +683,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-        Toast.makeText(this,"UNCONNECTED",Toast.LENGTH_SHORT).show();
+
         musicService = null;
     }
     private void setFavoriteImageSource() throws JSONException {
@@ -722,7 +717,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
 
     @Override
     protected void onDestroy() {
-        Toast.makeText(this,"Destroy",Toast.LENGTH_SHORT).show();
+
         super.onDestroy();
     }
 }

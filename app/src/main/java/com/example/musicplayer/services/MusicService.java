@@ -4,7 +4,7 @@ import static com.example.musicplayer.ApplicationClass.ACTION_CLOSE;
 import static com.example.musicplayer.ApplicationClass.ACTION_NEXT;
 import static com.example.musicplayer.ApplicationClass.ACTION_PLAY;
 import static com.example.musicplayer.ApplicationClass.ACTION_PREVIOUS;
-import static com.example.musicplayer.ApplicationClass.CHANNEL_ID2;
+import static com.example.musicplayer.ApplicationClass.CHANNEL_ID;
 import static com.example.musicplayer.PlayerActivity.isRepeat;
 import static com.example.musicplayer.PlayerActivity.playlist;
 
@@ -94,7 +94,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         if(myPosition != - 1) {
             playMedia(myPosition);
         }
-        putLastPlayedToSharePreferences();
+//        putLastPlayedToSharePreferences();
 
         if(actionName != null) {
             switch (actionName) {
@@ -172,7 +172,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        putLastPlayedToSharePreferences();
+//        putLastPlayedToSharePreferences();
     }
 
     public boolean isPlaying() {
@@ -215,7 +215,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 .setAction(ACTION_CLOSE);
         PendingIntent closePending = PendingIntent.getBroadcast(this,0, closeIntent,PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         int playPauseBtn = isPlaying() ? R.drawable.baseline_pause_circle_dark_24 : R.drawable.baseline_play_circle_dark_24;
-        Notification notification = new NotificationCompat.Builder(this,CHANNEL_ID2)
+        Notification notification = new NotificationCompat.Builder(this,CHANNEL_ID)
                 .setLargeIcon(bitmap)
                 .setSmallIcon(playPauseBtn)
                 .setContentTitle(getCurrentSong().getName_music())
@@ -235,14 +235,14 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public void hiddenNotification() {
         stopForeground(true);
     }
-    public void putLastPlayedToSharePreferences() {
-        sharedPreferences = getSharedPreferences("LAST_PLAYED",MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt("position",position);
-        String jsonArray = new Gson().toJson(listMusics);
-        editor.putString("listMusics",jsonArray);
-        editor.commit();
-    }
+//    public void putLastPlayedToSharePreferences() {
+//        sharedPreferences = getSharedPreferences("LAST_PLAYED",MODE_PRIVATE);
+//        SharedPreferences.Editor editor = sharedPreferences.edit();
+//        editor.putInt("position",position);
+//        String jsonArray = new Gson().toJson(listMusics);
+//        editor.putString("listMusics",jsonArray);
+//        editor.commit();
+//    }
 
     public void nextMusic() {
         if(actionPlaying != null) {
@@ -256,7 +256,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             actionPlaying.playPauseBtnClicked();
         }
     }
-    public boolean isReadyToPlay() {
-        return mediaPlayer != null ? true : false;
-    }
+//    public boolean isReadyToPlay() {
+//        return mediaPlayer != null ? true : false;
+//    }
 }
