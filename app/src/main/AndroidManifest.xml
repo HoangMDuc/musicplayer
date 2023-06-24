@@ -3,19 +3,26 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/logo"
+        android:name=".ApplicationClass"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Musicplayer"
         tools:targetApi="31">
+        <activity
+            android:name=".PlayerActivity"
+            android:exported="false" />
         <activity
             android:name=".DownloadedMusicActivity"
             android:exported="false" />
@@ -49,9 +56,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".PlayerActivity"
-            android:exported="false" />
+
+        <service android:name=".services.MusicService" android:exported="true" android:enabled="true" />
+        <receiver android:name=".NotificationReceiver" android:exported="false" android:enabled="true" >
+            <intent-filter>
+                <action android:name="ACTION_PLAY"/>
+                <action android:name="ACTION_PREVIOUS"/>
+                <action android:name="ACTION_NEXT"/>
+                <action android:name="ACTION_CLOSE"/>
+
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

@@ -82,6 +82,7 @@ public class HistorySongAdapter extends RecyclerView.Adapter<HistorySongAdapter.
         Music myMusic = listData.get(position);
         holder.music_name_tv.setText(myMusic.getName_music());
         holder.singer_name_tv.setText(myMusic.getName_singer());
+//        holder.download_img.setImageResource(R.drawable.download_white);
         Picasso.get().load(myMusic.getImage_music()).into(holder.music_img);
 
         holder.constraintLayout.setOnClickListener(new View.OnClickListener() {
@@ -290,7 +291,7 @@ public class HistorySongAdapter extends RecyclerView.Adapter<HistorySongAdapter.
         ConstraintLayout constraintLayout;
         public ViewHolder(View itemView) {
             super(itemView);
-            this.download_img = (ImageView) itemView.findViewById(R.id.download_image);
+            this.download_img = (ImageView) itemView.findViewById(R.id.download_icon);
             this.option_btn = (ImageButton) itemView.findViewById(R.id.option_btn);
             this.music_img = (ImageView) itemView.findViewById(R.id.song_image);
             this.music_name_tv = (TextView) itemView.findViewById(R.id.music_name);

@@ -75,6 +75,7 @@ public class PlayListAdapter extends RecyclerView.Adapter<PlayListAdapter.ViewHo
 
     @Override
     public int getItemCount() {
+        if(listdata == null) return 0;
         return listdata.size();
     }
 

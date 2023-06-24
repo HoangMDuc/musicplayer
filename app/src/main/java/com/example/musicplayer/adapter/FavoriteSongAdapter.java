@@ -283,7 +283,7 @@ public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapte
         ConstraintLayout constraintLayout;
         public ViewHolder(View itemView) {
             super(itemView);
-            this.download_img = (ImageView) itemView.findViewById(R.id.download_image);
+            this.download_img = (ImageView) itemView.findViewById(R.id.download_icon);
             this.option_btn = (ImageButton) itemView.findViewById(R.id.option_btn);
             this.music_img = (ImageView) itemView.findViewById(R.id.song_image);
             this.music_name_tv = (TextView) itemView.findViewById(R.id.music_name);

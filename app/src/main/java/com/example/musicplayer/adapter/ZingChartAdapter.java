@@ -35,7 +35,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.musicplayer.FavoriteMusicActivity;
-import com.example.musicplayer.MainActivity;
 import com.example.musicplayer.PlayerActivity;
 import com.example.musicplayer.PlaylistsRepository;
 import com.example.musicplayer.R;

@@ -3,6 +3,7 @@ package com.example.musicplayer;
 import static com.example.musicplayer.MainActivity.PERMISSION_REQUEST_CODE;
 import static com.example.musicplayer.MainActivity.StartDownload;
 import static com.example.musicplayer.MainActivity.selectedMusic;
+import static com.example.musicplayer.custom_fragment.MiniPlayerFragment.setPlayPauseBtnImage;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -13,19 +14,24 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
-import android.media.MediaPlayer;
+
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -49,108 +55,83 @@ import com.example.musicplayer.model.Music.Music;
 import com.example.musicplayer.model.Music.MusicImp;
 import com.example.musicplayer.model.PlayList.PlayList;
 import com.example.musicplayer.model.PlayList.PlayListImp;
+import com.example.musicplayer.services.MusicService;
+import com.google.android.material.imageview.ShapeableImageView;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-public class PlayerActivity extends AppCompatActivity {
-
-    private static ArrayList<Music> listData;
-    private static ArrayList<Music> playlist;
-    private PlayerSongAdapter adapter;
-    private PlayListAdapter playListAdapter;
-    private static MediaPlayer mediaPlayer = MyMediaPlayer.getMediaPlayer();
-    private static int currentIndex = 0;
-    SharedPreferences sharedPreferences;
-    private static boolean isRandom = false;
-
-    public static boolean isIsRandom() {
-        return isRandom;
-    }
-
-    public static void setIsRandom(boolean isRandom) {
-        PlayerActivity.isRandom = isRandom;
-    }
-
-    private static boolean isPlaying = false;
-    private static boolean isRepeat = false;
-    TextView music_name,singer_name,currentTime,totalTime;
-    ImageView music_image;
+public class PlayerActivity extends AppCompatActivity implements ServiceConnection, ActionPlaying {
+    TextView song_name,artist_name,duration_played,duration_total;
+    ShapeableImageView cover_art;
+    ImageButton nextBtn,prevBtn,backBtn,shuffleBtn,repeatBtn,playPauseBtn;
+    SeekBar seekBar;
     PopupWindow popupWindow;
     ConstraintLayout player;
     PlayListImp pli;
     MusicImp mi;
+    ImageButton playlist_btn,chat_btn,download_btn,add_playlist_btn,like_playing_music;
+    public static ArrayList<Music> playlist;
+    private PlayerSongAdapter adapter;
+    private PlayListAdapter playListAdapter;
+    public static ArrayList<Music> listData;
+    int currentIndex = -1;
+    Thread playThread,nextThread,prevThread;
+    MusicService musicService;
+    SharedPreferences sharedPreferences;
+    public static boolean isShuffle = false, isRepeat = false;
 
-    ImageButton back_previous_activity, random_btn, repeat_btn, playlist_btn,previous_music_btn,next_music_btn,chat_btn,download_btn,add_playlist_btn,like_playing_music;
-    SeekBar seekBar;
-//    int x = 0;
-    ImageButton pauseAndPlayBtn;
+    @Override
+    protected void onRestart() {
+        Toast.makeText(this,"RESTART",Toast.LENGTH_SHORT).show();
+        super.onRestart();
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
+        Toast.makeText(this,"CREATE",Toast.LENGTH_SHORT).show();
+        initViews();
         sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
-        isPlaying = sharedPreferences.getBoolean("isPlaying", false);
-        isRandom = sharedPreferences.getBoolean("isRandom", false);
+        isShuffle = sharedPreferences.getBoolean("isRandom", false);
         isRepeat = sharedPreferences.getBoolean("isRepeat", false);
-
         mi = new MusicImp(sharedPreferences);
-        mediaPlayer.reset();
-        //get control
-        pauseAndPlayBtn = (ImageButton) findViewById(R.id.pause_and_play);
-        music_name = (TextView) findViewById(R.id.music_playing_name);
-        singer_name = (TextView) findViewById(R.id.music_playing_singer_name);
-        totalTime = (TextView) findViewById(R.id.music_time);
-        music_image = (ImageView) findViewById(R.id.music_playing_image);
-        seekBar = (SeekBar) findViewById(R.id.seekBar);
-        pauseAndPlayBtn.setImageResource(R.drawable.baseline_pause_circle_24);
-        currentTime = (TextView) findViewById(R.id.currentTime);
-        back_previous_activity = (ImageButton) findViewById(R.id.back_btn);
-        repeat_btn = (ImageButton) findViewById(R.id.repeat_music_btn);
-        random_btn = (ImageButton) findViewById(R.id.shuffle_music_btn);
-        playlist_btn = (ImageButton)  findViewById(R.id.playlist_btn);
-        previous_music_btn = (ImageButton) findViewById(R.id.previous_music_btn);
-        next_music_btn = (ImageButton) findViewById(R.id.next_music_btn);
-        add_playlist_btn = (ImageButton) findViewById(R.id.add_music_playing_to_playlist);
-        like_playing_music = (ImageButton) findViewById(R.id.like_playing_music);
-        chat_btn =(ImageButton) findViewById(R.id.chat_btn);
-        player = (ConstraintLayout) findViewById(R.id.player);
-        // get data
         listData = (ArrayList<Music>) getIntent().getSerializableExtra("ListMusic");
+        currentIndex = getIntent().getIntExtra("currentIndex", -1);
         playlist = new ArrayList<>(listData);
-        // get index of Song
-        currentIndex = getIntent().getIntExtra("currentIndex", 0);
-        //check if random = true then push clicked song to top of playlist
-        if(isRandom) {
+        if(isShuffle) {
             Music currentSong = listData.get(currentIndex);
             int currentSongInPlaylist = findMusicInList(playlist,currentSong);
             playlist.remove(currentSongInPlaylist);
             Collections.shuffle(playlist);
             playlist.add(0,currentSong);
             currentIndex = 0;
+            shuffleBtn.setImageResource(R.drawable.baseline_shuffle_on_24);
         }
-        // set info currentsong
-        setCurrentSong();
-        play();
-        setRandomImageSource();
-        setRepeatImageSource();
-        try {
-            setFavoriteImageSource();
-        }catch (JSONException e) {
-            e.printStackTrace();
+        if(isRepeat) {
+            repeatBtn.setImageResource(R.drawable.baseline_repeat_one_24);
         }
+        if(musicService != null ) {
+            musicService.stop();
+            musicService.reset();
+        }
+        Intent intent = new Intent(this, MusicService.class);
+        intent.putExtra("currentIndex",currentIndex);
+        startService(intent);
+
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(mediaPlayer != null && fromUser) {
-                    mediaPlayer.seekTo(progress);
+                if(musicService != null && fromUser) {
+                    musicService.seekTo(progress);
                 }
             }
 
@@ -164,126 +145,158 @@ public class PlayerActivity extends AppCompatActivity {
 
             }
         });
-
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if(mediaPlayer != null) {
-                    seekBar.setProgress(mediaPlayer.getCurrentPosition());
-                    currentTime.setText(convertToMMSS(mediaPlayer.getCurrentPosition() + ""));
+                if(musicService != null) {
+                    seekBar.setProgress(musicService.getCurrentPosition());
+                    duration_played.setText(convertToMMSS(musicService.getCurrentPosition() + ""));
                 }
                 new Handler().postDelayed(this,100);
             }
         });
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                if(isRepeat) {
-                    mediaPlayer.start();
-                }else {
-                    playNextSong();
-                }
-            }
-        });
-        like_playing_music.setOnClickListener(new View.OnClickListener() {
+        shuffleBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Music currentSong = getCurrentSong();
-                if(sharedPreferences == null) {
-                    sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
-                }
-                mi = new MusicImp(sharedPreferences);
-                mi.toggleLikeMusic(currentSong.get_id());
-               try {
-                   setFavoriteImageSource();
-               }catch (JSONException e) {
-                   e.printStackTrace();
-               }
-            }
-        });
-        pauseAndPlayBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(isPlaying) {
-                    pause();
-                }else {
-                    resume();
-                }
-                if(sharedPreferences !=  null) {
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean("isPlaying",isPlaying);
-                    editor.commit();
-                }else {
-                    sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean("isPlaying",isPlaying);
-                    editor.commit();
-                }
-            }
-        });
-        back_previous_activity.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-        repeat_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isRepeat = !isRepeat;
-                if(sharedPreferences !=  null) {
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean("isRepeat",isRepeat);
-                    editor.commit();
-                }else {
-                    sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean("isRepeat", isRepeat);
-                    editor.commit();
-                }
-                setRepeatImageSource();
-            }
-        });
-        random_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isRandom = !isRandom;
-                if(isRandom) {
+
+                isShuffle = !isShuffle;
+                if(isShuffle) {
                     Music currentSong = getCurrentSong();
                     playlist.remove(currentIndex);
                     Collections.shuffle(playlist);
                     playlist.add(0,currentSong);
                     currentIndex = 0;
+                    shuffleBtn.setImageResource(R.drawable.baseline_shuffle_on_24);
                 }else {
                     Music currentSong = getCurrentSong();
                     int currentSongInList = findMusicInList(listData,currentSong);
                     currentIndex = currentSongInList;
                     playlist = new ArrayList<>(listData);
+                    shuffleBtn.setImageResource(R.drawable.baseline_shuffle_24);
                 }
+                musicService.setListMusics(playlist);
                 if(sharedPreferences !=  null) {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean("isRandom",isRandom);
+                    editor.putBoolean("isRandom",isShuffle);
                     editor.commit();
                 }else {
                     sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean("isRandom",isRandom);
+                    editor.putBoolean("isRandom",isShuffle);
                     editor.commit();
                 }
-                setRandomImageSource();
             }
         });
-
-        previous_music_btn.setOnClickListener(new View.OnClickListener() {
+        repeatBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                playPreviousSong();
+                if(isRepeat) {
+                    isRepeat = false;
+                    repeatBtn.setImageResource(R.drawable.baseline_repeat_24);
+                }else {
+                    isRepeat = true;
+                    repeatBtn.setImageResource(R.drawable.baseline_repeat_one_24);
+                }
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("isRepeat",isRepeat);
+                editor.commit();
             }
-        }) ;
-        next_music_btn.setOnClickListener(new View.OnClickListener() {
+        });
+        backBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                playNextSong();
+                finish();
+            }
+        });
+        playlist_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LayoutInflater inflater = (LayoutInflater) view.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                View view1 = inflater.inflate(R.layout.playlist_song_popup, null);
+                adapter = new PlayerSongAdapter(playlist);
+                adapter.setOnItemClickListener(new PlayerSongAdapter.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(int position) {
+                        if(isShuffle) {
+                            currentIndex = position;
+                            Music currentSong = getCurrentSong();
+                            playlist.remove(position);
+                            playlist.add(0, currentSong);
+                            currentIndex = 0;
+                            setCurrentSong();
+                            musicService.setListMusics(playlist);
+                            musicService.create(currentIndex);
+                            musicService.start();
+
+
+                        }else {
+                            currentIndex = position;
+                            setCurrentSong();
+                            musicService.create(currentIndex);
+                            musicService.start();
+
+                        }
+                        mi.addToHistory(getCurrentSong().get_id());
+                        if(popupWindow !=  null && popupWindow.isShowing()) {
+                            popupWindow.dismiss();
+                        }
+                    }
+                });
+                RecyclerView recyclerView = (RecyclerView) view1.findViewById(R.id.playlist_rcv);
+                ConstraintLayout layout = (ConstraintLayout) view1.findViewById(R.id.playlist_song_popup);
+                Picasso.get().load(getCurrentSong().getImage_music()).into(new Target() {
+                    @Override
+                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+
+                        cover_art.setImageBitmap(bitmap);
+                        // Tạo palette từ ảnh bitmap
+                        Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
+                            @Override
+                            public void onGenerated(Palette palette) {
+                                // Trích xuất màu chính từ palette
+                                int dominantColor = palette.getDominantColor(0);
+                                int[] gradientColors = {dominantColor, 0xFF000000}; // Màu chính và màu đen
+
+                                // Tạo drawable gradient
+                                GradientDrawable gradientDrawable = new GradientDrawable(
+                                        GradientDrawable.Orientation.TOP_BOTTOM,
+                                        gradientColors
+                                );
+
+                                // Đặt nền gradient cho phần tử container
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                                    layout.setBackground(gradientDrawable);
+                                } else {
+                                    layout.setBackgroundDrawable(gradientDrawable);
+                                }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                        // Xử lý lỗi khi không tải được ảnh
+                    }
+
+                    @Override
+                    public void onPrepareLoad(Drawable placeHolderDrawable) {
+                        // Xử lý trước khi tải ảnh
+                    }
+                });
+                recyclerView.setHasFixedSize(true);
+                recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
+                recyclerView.setAdapter(adapter);
+                ImageButton back_btn = (ImageButton) view1.findViewById(R.id.back_btn);
+                int width = LinearLayout.LayoutParams.MATCH_PARENT;
+                int height = ViewGroup.LayoutParams.MATCH_PARENT;
+                popupWindow = new PopupWindow(view1,width, height, true);
+                popupWindow.showAtLocation(view.getRootView(), Gravity.BOTTOM, 0, 0);
+                back_btn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        popupWindow.dismiss();
+                    }
+                });
             }
         });
         add_playlist_btn.setOnClickListener(new View.OnClickListener() {
@@ -321,12 +334,12 @@ public class PlayerActivity extends AppCompatActivity {
                                     new PlayListImp(sharedPreferences.getString("accessToken", ""))
                                             .create(getCurrentSong().get_id(),playlist_name.getText().toString())
                                             .thenAccept( playList -> {
-                                               runOnUiThread(new Runnable() {
-                                                   @Override
-                                                   public void run() {
-                                                       Toast.makeText(getBaseContext(), "Đã thêm bài hát vào danh sách phát " + playList.getName_list(), Toast.LENGTH_SHORT).show();
-                                                   }
-                                               });
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        Toast.makeText(getBaseContext(), "Đã thêm bài hát vào danh sách phát " + playList.getName_list(), Toast.LENGTH_SHORT).show();
+                                                    }
+                                                });
                                             }).exceptionally(e -> {
                                                 runOnUiThread(new Runnable() {
                                                     @Override
@@ -397,94 +410,6 @@ public class PlayerActivity extends AppCompatActivity {
 
             }
         });
-
-        playlist_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                LayoutInflater inflater = (LayoutInflater) view.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                View view1 = inflater.inflate(R.layout.playlist_song_popup, null);
-                adapter = new PlayerSongAdapter(playlist);
-                adapter.setOnItemClickListener(new PlayerSongAdapter.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(int position) {
-
-                        if(isRandom) {
-                            currentIndex = position;
-                            Music currentSong = getCurrentSong();
-                            playlist.remove(position);
-                            playlist.add(0, currentSong);
-                            currentIndex = 0;
-                            setCurrentSong();
-                            play();
-
-                        }else {
-                            currentIndex = position;
-                            setCurrentSong();
-                            play();
-
-                        }
-                        if(popupWindow !=  null && popupWindow.isShowing()) {
-                            popupWindow.dismiss();
-                        }
-                    }
-                });
-                RecyclerView recyclerView = (RecyclerView) view1.findViewById(R.id.playlist_rcv);
-                ConstraintLayout layout = (ConstraintLayout) view1.findViewById(R.id.playlist_song_popup);
-                Picasso.get().load(getCurrentSong().getImage_music()).into(new Target() {
-                    @Override
-                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-
-                        music_image.setImageBitmap(bitmap);
-                        // Tạo palette từ ảnh bitmap
-                        Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
-                            @Override
-                            public void onGenerated(Palette palette) {
-                                // Trích xuất màu chính từ palette
-                                int dominantColor = palette.getDominantColor(0);
-                                int[] gradientColors = {dominantColor, 0xFF000000}; // Màu chính và màu đen
-
-                                // Tạo drawable gradient
-                                GradientDrawable gradientDrawable = new GradientDrawable(
-                                        GradientDrawable.Orientation.TOP_BOTTOM,
-                                        gradientColors
-                                );
-
-                                // Đặt nền gradient cho phần tử container
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                    layout.setBackground(gradientDrawable);
-                                } else {
-                                    layout.setBackgroundDrawable(gradientDrawable);
-                                }
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onBitmapFailed(Exception e, Drawable errorDrawable) {
-                        // Xử lý lỗi khi không tải được ảnh
-                    }
-
-                    @Override
-                    public void onPrepareLoad(Drawable placeHolderDrawable) {
-                        // Xử lý trước khi tải ảnh
-                    }
-                });
-                recyclerView.setHasFixedSize(true);
-                recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
-                recyclerView.setAdapter(adapter);
-                ImageButton back_btn = (ImageButton) view1.findViewById(R.id.back_btn);
-                int width = LinearLayout.LayoutParams.MATCH_PARENT;
-                int height = ViewGroup.LayoutParams.MATCH_PARENT;
-                popupWindow = new PopupWindow(view1,width, height, true);
-                popupWindow.showAtLocation(view.getRootView(), Gravity.BOTTOM, 0, 0);
-                back_btn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        popupWindow.dismiss();
-                    }
-                });
-            }
-        });
         chat_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -551,9 +476,6 @@ public class PlayerActivity extends AppCompatActivity {
                 });
             }
         });
-
-
-        download_btn = (ImageButton) findViewById(R.id.download_playing_music);
         download_btn.setOnClickListener(v -> {
             Toast.makeText(getBaseContext(),"clicked",Toast.LENGTH_SHORT).show();
             selectedMusic = getCurrentSong();
@@ -571,6 +493,60 @@ public class PlayerActivity extends AppCompatActivity {
                 StartDownload(this, selectedMusic.getSrc_music(), selectedMusic);
             }
         });
+        like_playing_music.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Music currentSong = getCurrentSong();
+                if(sharedPreferences == null) {
+                    sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
+                }
+                mi = new MusicImp(sharedPreferences);
+                mi.toggleLikeMusic(currentSong.get_id());
+                try {
+                    setFavoriteImageSource();
+                }catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        playPauseBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playPauseBtnClicked();
+            }
+        });
+        prevBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                prevBtnClicked();
+            }
+        });
+        nextBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                nextBtnClicked();
+            }
+        });
+    }
+    private void initViews() {
+        song_name = (TextView) findViewById(R.id.music_playing_name);
+        artist_name = (TextView) findViewById(R.id.music_playing_singer_name);
+        duration_played = (TextView) findViewById(R.id.currentTime);
+        duration_total = (TextView) findViewById(R.id.music_time);
+        cover_art = (ShapeableImageView) findViewById(R.id.music_playing_image);
+        nextBtn = (ImageButton) findViewById(R.id.next_music_btn);
+        prevBtn = (ImageButton) findViewById(R.id.previous_music_btn);
+        backBtn = (ImageButton) findViewById(R.id.back_btn);
+        shuffleBtn = (ImageButton) findViewById(R.id.shuffle_music_btn);
+        repeatBtn = (ImageButton) findViewById(R.id.repeat_music_btn);
+        playPauseBtn = (ImageButton) findViewById(R.id.pause_and_play) ;
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
+        playlist_btn = (ImageButton)  findViewById(R.id.playlist_btn);
+        download_btn = (ImageButton) findViewById(R.id.download_playing_music);
+        add_playlist_btn = (ImageButton) findViewById(R.id.add_music_playing_to_playlist);
+        like_playing_music = (ImageButton) findViewById(R.id.like_playing_music);
+        chat_btn =(ImageButton) findViewById(R.id.chat_btn);
+        player = (ConstraintLayout) findViewById(R.id.player);
     }
     private int findMusicInList(ArrayList<Music> list, Music m) {
         for(int i= 0 ; i< list.size();i++) {
@@ -581,13 +557,12 @@ public class PlayerActivity extends AppCompatActivity {
         return -1;
     }
     private void setCurrentSong() {
-
         //set
         Picasso.get().load(getCurrentSong().getImage_music()).into(new Target() {
             @Override
             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
 
-                music_image.setImageBitmap(bitmap);
+                cover_art.setImageBitmap(bitmap);
                 // Tạo palette từ ảnh bitmap
                 Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
                     @Override
@@ -622,122 +597,100 @@ public class PlayerActivity extends AppCompatActivity {
                 // Xử lý trước khi tải ảnh
             }
         });
-        music_name.setText(getCurrentSong().getName_music());
-        singer_name.setText(getCurrentSong().getName_singer());
-        totalTime.setText(getCurrentSong().getTime_format());
-
+        song_name.setText(getCurrentSong().getName_music());
+        artist_name.setText(getCurrentSong().getName_singer());
+        duration_total.setText(getCurrentSong().getTime_format());
+        seekBar.setMax(musicService.getDuration());
     }
     private Music getCurrentSong() {
         return playlist.get(currentIndex);
     }
-    public static int getCurrentIndex() {
-        return currentIndex;
-    }
-    public static void setCurrentIndex(int index) {
-
-        currentIndex = index;
-
-    }
-
-
-    private void playNextSong() {
-        currentIndex = (currentIndex + 1) % playlist.size();
-        setCurrentSong();
-        play();
-    }
-    private void playPreviousSong() {
-        currentIndex = (currentIndex - 1) % playlist.size();
-        setCurrentSong();
-        play();
-    }
-
-
-    private void pause() {
-        mediaPlayer.pause();
-        isPlaying = false;
-        if(pauseAndPlayBtn !=  null) {
-            pauseAndPlayBtn.setImageResource(R.drawable.baseline_play_circle_24);
-
-        }
-    }
-    private  void play(){
-
-        mediaPlayer.reset();
-        try {
-            setFavoriteImageSource();
-        }catch (JSONException e) {
-            e.printStackTrace();
-        }
-        try {
-            mi.addToHistory(getCurrentSong().get_id());
-            mediaPlayer.setDataSource(getCurrentSong().getSrc_music());
-            mediaPlayer.prepare();
-            seekBar.setProgress(0);
-            seekBar.setMax(mediaPlayer.getDuration());
-            mediaPlayer.start();
-            isPlaying = true;
-            if(pauseAndPlayBtn !=  null) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        pauseAndPlayBtn.setImageResource(R.drawable.baseline_pause_circle_24);
-                    }
-                });
-            }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    };
-    private void resume() {
-        mediaPlayer.start();
-        isPlaying = true;
-        if(pauseAndPlayBtn !=  null) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    pauseAndPlayBtn.setImageResource(R.drawable.baseline_pause_circle_24);
-                }
-            });
-        }
-
-    }
-
     public static String convertToMMSS(String duration){
         Long millis = Long.parseLong(duration);
         return String.format("%02d:%02d",
                 TimeUnit.MILLISECONDS.toMinutes(millis) % TimeUnit.HOURS.toMinutes(1),
                 TimeUnit.MILLISECONDS.toSeconds(millis) % TimeUnit.MINUTES.toSeconds(1));
     }
-    private void setRandomImageSource() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if( isRandom == true) {
-                    random_btn.setImageResource(R.drawable.baseline_shuffle_on_24);
-                }else {
-                    random_btn.setImageResource(R.drawable.baseline_shuffle_24);
-                }
 
-            }
-        });
-    }
-    private void setRepeatImageSource() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if( isRepeat == true) {
-                    repeat_btn.setImageResource(R.drawable.baseline_repeat_one_24);
-                }else {
-                    repeat_btn.setImageResource(R.drawable.baseline_repeat_24);
-                }
+    @Override
+    protected void onResume() {
+        Toast.makeText(this,"RESUME",Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, MusicService.class);
+        bindService(intent,this,BIND_AUTO_CREATE);
 
-            }
-        });
-
+        super.onResume();
     }
 
+    @Override
+    protected void onPause() {
+        Toast.makeText(this,"PAUSE",Toast.LENGTH_SHORT).show();
+        super.onPause();
+        unbindService(this);
+    }
+
+
+
+    public void playPauseBtnClicked() {
+        if(musicService.isPlaying()) {
+            playPauseBtn.setImageResource(R.drawable.baseline_play_circle_24);
+            setPlayPauseBtnImage(R.drawable.baseline_play_circle_dark_24);
+            musicService.pause();
+        }else {
+            playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
+            setPlayPauseBtnImage(R.drawable.baseline_pause_circle_dark_24);
+            musicService.start();
+        }
+        musicService.showNotification();
+        seekBar.setMax(musicService.getDuration());
+
+    }
+
+
+    public void prevBtnClicked() {
+        musicService.stop();
+        musicService.reset();
+        currentIndex = (currentIndex - 1 + listData.size()) % listData.size();
+        musicService.create(currentIndex);
+        musicService.start();
+        mi.addToHistory(getCurrentSong().get_id());
+        musicService.OnCompleted();
+        musicService.showNotification();
+        playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
+        setCurrentSong();
+
+    }
+
+
+    public void nextBtnClicked() {
+        musicService.stop();
+        musicService.reset();
+        currentIndex = (currentIndex + 1) % listData.size();
+        musicService.create(currentIndex);
+        musicService.start();
+        mi.addToHistory(getCurrentSong().get_id());
+        musicService.OnCompleted();
+        musicService.showNotification();
+        playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
+        setCurrentSong();
+
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        MusicService.MyBinder myBinder = (MusicService.MyBinder) service;
+        musicService = myBinder.getMusicService();
+        musicService.setCallback(this);
+        mi.addToHistory(getCurrentSong().get_id());
+        musicService.OnCompleted();
+        musicService.showNotification();
+        setCurrentSong();
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+        Toast.makeText(this,"UNCONNECTED",Toast.LENGTH_SHORT).show();
+        musicService = null;
+    }
     private void setFavoriteImageSource() throws JSONException {
         if(sharedPreferences != null) {
             Music currentSong = getCurrentSong();
@@ -767,13 +720,9 @@ public class PlayerActivity extends AppCompatActivity {
         }
     }
 
+    @Override
     protected void onDestroy() {
+        Toast.makeText(this,"Destroy",Toast.LENGTH_SHORT).show();
         super.onDestroy();
-        if (popupWindow != null && popupWindow.isShowing()) {
-            popupWindow.dismiss();
-        }
-//        if(mediaPlayer != null) {
-//            mediaPlayer.release();
-//        }
     }
 }

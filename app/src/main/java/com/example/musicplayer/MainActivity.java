@@ -13,18 +13,21 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.example.musicplayer.custom_fragment.ExploreFragment;
 import com.example.musicplayer.custom_fragment.HeaderFragment;
 import com.example.musicplayer.custom_fragment.HomeFragment;
+import com.example.musicplayer.custom_fragment.MiniPlayerFragment;
 import com.example.musicplayer.custom_fragment.ZingChartFragment;
 import com.example.musicplayer.model.Music.Music;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 
 public class MainActivity extends AppCompatActivity {
-    SharedPreferences sharedPreferences;
+    SharedPreferences sharedPreferences, lastPlayedSP;
 
 //    TextView playlist_tv,album_tv;
 //    View divider;
@@ -33,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     com.example.musicplayer.custom_fragment.HeaderFragment HeaderFragment;
     ZingChartFragment zingChartFragment;
     ExploreFragment exploreFragment;
+    MiniPlayerFragment miniPlayerFragment;
+    FrameLayout frameLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,8 +52,10 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         }
         else {
+            setContentView(R.layout.activity_main);
             HeaderFragment = new HeaderFragment();
             homeFragment = new HomeFragment();
+
             getSupportFragmentManager().beginTransaction()
                     .setReorderingAllowed(true)
                     .replace(R.id.header_fragment, HeaderFragment, null)
@@ -57,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
                     .commit();
             zingChartFragment = new ZingChartFragment();
             exploreFragment = new ExploreFragment();
-            setContentView(R.layout.activity_main);
+
             menu = (BottomNavigationView) findViewById(R.id.menu);
             menu.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
                 @Override
@@ -92,8 +99,24 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-
     }
+
+    @Override
+    protected void onResume() {
+        lastPlayedSP = getSharedPreferences("LAST_PLAYED",MODE_PRIVATE);
+
+        int currentIndex = lastPlayedSP.getInt("position", -1);
+        if(currentIndex != -1) {
+            miniPlayerFragment = new MiniPlayerFragment();
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.mini_player,miniPlayerFragment,"MiniPlayer")
+                    .addToBackStack(null)
+                    .commit();
+        }
+
+        super.onResume();
+    }
+
     public static Music selectedMusic;
     public static final int PERMISSION_REQUEST_CODE = 10;
     public static void StartDownload(Context context, String url, Music music){
@@ -141,4 +164,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+
 }
