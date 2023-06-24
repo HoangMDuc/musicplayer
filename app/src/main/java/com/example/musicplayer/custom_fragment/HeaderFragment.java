@@ -14,6 +14,7 @@ import android.widget.PopupWindow;
 import android.widget.SearchView;
 import android.widget.TextView;
 
+import com.example.musicplayer.AccountActivity;
 import com.example.musicplayer.LoginActivity;
 import com.example.musicplayer.R;
 import com.example.musicplayer.SearchResultActivity;
@@ -75,56 +76,10 @@ public class HeaderFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_header, container, false);
-        sv = view.findViewById(R.id.sv);
         user = view.findViewById(R.id.imgBtnUser);
-        //homeFragment = new HomeFragment();
-
+        sv = view.findViewById(R.id.sv);
         user.setOnClickListener(v -> {
-            View popupView = getLayoutInflater().inflate(R.layout.user_popup, null);
-            PopupWindow popupWindow = new PopupWindow(popupView,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT);
-            popupWindow.setContentView(popupView);
-            // Set focusable
-            popupWindow.setFocusable(true);
-
-            // Set outside touchable
-            popupWindow.setOutsideTouchable(true);
-
-            // Show popup window
-            popupWindow.showAsDropDown(v);
-
-            ImageButton btnLogout = (ImageButton) popupView.findViewById(R.id.imgBtnLogout);
-            TextView tvUser = (TextView) popupView.findViewById(R.id.tvUser);
-            TextView tvEmail = (TextView) popupView.findViewById(R.id.tvEmail);
-
-
-            SharedPreferences sharedPreferences = getContext().getSharedPreferences("my_preferences", getContext().MODE_PRIVATE);
-
-            JSONObject userData;
-            try {
-                userData = new JSONObject(sharedPreferences.getString("data", ""));
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
-            String name = "",email = "";
-            try {
-                email = userData.getString("email");
-                name = userData.getString("user_name");
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
-            tvUser.setText(name);
-            tvEmail.setText(email);
-
-            btnLogout.setOnClickListener(v1 -> {
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.remove("isLogin");
-                editor.apply();
-                Intent intent = new Intent(getContext(), LoginActivity.class);
-                startActivity(intent);
-            });
-
+            startActivity(new Intent(getActivity(), AccountActivity.class));
         });
 
         sv.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {

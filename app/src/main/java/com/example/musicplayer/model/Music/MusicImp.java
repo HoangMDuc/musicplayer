@@ -2,12 +2,8 @@ package com.example.musicplayer.model.Music;
 
 import android.content.SharedPreferences;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-
-import com.example.musicplayer.R;
-import com.example.musicplayer.model.PlayList.PlayList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -167,6 +163,48 @@ public class MusicImp implements MusicDao{
             }
         });
     }
+
+    @Override
+    public void toggleDownloadedMusic(String idMusic) {
+
+        if(sharedPreferences == null) {
+
+            return;
+        }
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Log.d("TEST",sharedPreferences.toString());
+        if(!sharedPreferences.contains("downloaded_list")) {
+            Log.d("TEST2","OK");
+            JSONArray downloadedArray = new JSONArray();
+            downloadedArray.put(idMusic);
+            editor.putString("downloaded_list", downloadedArray.toString());
+            editor.commit();
+        }else {
+            String jsonString = sharedPreferences.getString("downloaded_list", "");
+            Log.d("TEST2",jsonString);
+            try {
+                JSONArray downloadedArray = new JSONArray(jsonString);
+                int index = -1;
+                for(int i = 0; i< downloadedArray.length(); i++) {
+                    if(idMusic.equals(downloadedArray.getString(i))) {
+                        index = i;
+                        break;
+                    }
+                }
+                if(index != -1 ) {
+                    downloadedArray.remove(index);
+                }else {
+                    downloadedArray.put(idMusic);
+                }
+
+                editor.putString("downloaded_list", downloadedArray.toString());
+                editor.commit();
+            }catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public CompletableFuture<ArrayList<Music>> getFavoriteMusics() {
         OkHttpClient client = new OkHttpClient();
         CompletableFuture<ArrayList<Music>> future = new CompletableFuture<>();

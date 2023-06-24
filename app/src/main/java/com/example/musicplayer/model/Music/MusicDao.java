@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 public interface MusicDao {
     public CompletableFuture<ArrayList<Music>> getTrendingMusic();
     public void toggleLikeMusic(String id);
+    public void toggleDownloadedMusic(String id);
     public void addToHistory(String id);
     public CompletableFuture<ArrayList<Music>> getFavoriteMusics();
     public CompletableFuture<ArrayList<Music>> getHistoryMusic();

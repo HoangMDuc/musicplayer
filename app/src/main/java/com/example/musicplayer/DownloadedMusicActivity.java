@@ -4,13 +4,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.SharedPreferences;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.example.musicplayer.adapter.DownloadedMusicAdapter;
 import com.example.musicplayer.model.Music.Music;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -20,25 +26,28 @@ public class DownloadedMusicActivity extends AppCompatActivity {
     ImageButton imgBtnBack;
     DownloadedMusicAdapter adapter;
     ArrayList<Music> List;
+    private static SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_downloaded_music);
         recyclerView = findViewById(R.id.rcvDownloaded);
         imgBtnBack = findViewById(R.id.imgBtnBack);
+        sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
+
         imgBtnBack.setOnClickListener(v -> finish());
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         List = new ArrayList<>();
         String downloadPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
 
-// Tạo một đối tượng File để đại diện cho thư mục Download
+
         File downloadDirectory = new File(downloadPath);
 
-// Lấy danh sách tất cả các file trong thư mục Download
+
         File[] files = downloadDirectory.listFiles();
 
-// Lặp qua danh sách các file và thêm các file mp3 vào danh sách mp3Files
+
         for (File file : files) {
             if (file.isFile() && file.getName().endsWith(".mp3")) {
                 MediaMetadataRetriever retriever = new MediaMetadataRetriever();
@@ -47,7 +56,7 @@ public class DownloadedMusicActivity extends AppCompatActivity {
                 String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
                 long durationInMillis = Long.parseLong(duration);
 
-// Chuyển đổi thời gian thành định dạng phút:giây
+
                 int minutes = (int) (durationInMillis / (1000 * 60));
                 int seconds = (int) ((durationInMillis / 1000) % 60);
                 String timeformat = String.format("%d:%02d", minutes, seconds);
@@ -59,5 +68,25 @@ public class DownloadedMusicActivity extends AppCompatActivity {
 
         adapter = new DownloadedMusicAdapter(List);
         recyclerView.setAdapter(adapter);
+    }
+    public static boolean isDownloadedMusic(String idMusic) {
+        if(sharedPreferences != null) {
+            try {
+                JSONArray downloadedArray = new JSONArray(sharedPreferences.getString("downloaded_list",""));
+                for(int i = 0 ;i < downloadedArray.length();i++) {
+
+                    if (idMusic.equals(downloadedArray.getString(i))) {
+                        return true;
+                    }
+                }
+                return false;
+            }catch (JSONException e) {
+                e.printStackTrace();
+                return false;
+            }
+
+        }
+
+        return false;
     }
 }

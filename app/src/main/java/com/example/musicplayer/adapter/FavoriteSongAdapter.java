@@ -14,6 +14,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +35,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.musicplayer.DownloadedMusicActivity;
 import com.example.musicplayer.PlayerActivity;
 import com.example.musicplayer.PlaylistsRepository;
 import com.example.musicplayer.R;
@@ -51,12 +53,11 @@ public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapte
     private Activity activity;
     PlayListImp pli;
     PlayListAdapter playListAdapter;
-    TextView sg_tv,mn_tv,tv_like;
+    TextView sg_tv,mn_tv,tv_like,download_tv;
     ImageButton add_playlist_btn,like_btn;
     PopupWindow popupWindow;
-    ImageView music_image;
+    ImageView music_image, download_btn;
 
-    LinearLayout download_btn;
 
     SharedPreferences sharedPreferences;
     public FavoriteSongAdapter(Activity activity,ArrayList<Music> listData , SharedPreferences sharedPreferences) {
@@ -105,7 +106,17 @@ public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapte
                 like_btn = (ImageButton) view1.findViewById(R.id.like_btn);
                 add_playlist_btn = (ImageButton) view1.findViewById(R.id.add_playlist_btn);
 
-                download_btn = view1.findViewById(R.id.download_layout);
+                download_btn = view1.findViewById(R.id.download_btn);
+                download_tv = view1.findViewById(R.id.download_tv);
+
+                if (DownloadedMusicActivity.isDownloadedMusic(myMusic.get_id())){
+                    download_btn.setImageResource(R.drawable.download_purple);
+                    download_tv.setText("Đã tải xuống");
+                } else {
+                    download_btn.setImageResource(R.drawable.download_white);
+                    download_tv.setText("Tải xuống");
+                }
+                Log.d("download", DownloadedMusicActivity.isDownloadedMusic(myMusic.get_id())+"");
 
                 tv_like.setText("Xóa khỏi danh sách yêu thích");
                 sg_tv.setText(myMusic.getName_singer());
@@ -118,6 +129,7 @@ public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapte
                 popupWindow.showAtLocation(view.getRootView(), Gravity.BOTTOM, 0, 0);
 
                 download_btn.setOnClickListener(v -> {
+                    new MusicImp(sharedPreferences).toggleDownloadedMusic(myMusic.get_id());
                     selectedMusic = myMusic;
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         if (ContextCompat.checkSelfPermission(v.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -129,6 +141,7 @@ public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapte
                     } else {
                         StartDownload(activity, myMusic.getSrc_music(), myMusic);
                     }
+                    popupWindow.dismiss();
                 });
                 like_btn.setOnClickListener(new View.OnClickListener() {
                     @Override

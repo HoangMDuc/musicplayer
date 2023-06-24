@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -12,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,28 +63,29 @@ public class MusicUploadImp implements MusicUploadDao {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
 
                 if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+                else {
+                    try {
+                        String jsonData = response.body().string();
+                        JSONObject jsonObject = new JSONObject(jsonData);
+                        JSONArray jsonArray = jsonObject.getJSONArray("data");
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject musicUP = jsonArray.getJSONObject(i);
 
-                try {
-                    String jsonData = response.body().string();
-                    JSONObject jsonObject = new JSONObject(jsonData);
-                    JSONArray jsonArray = jsonObject.getJSONArray("data");
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        JSONObject musicUP = jsonArray.getJSONObject(i);
+                                String id_music = musicUP.getString("_id");
+                            String name_singer = musicUP.getString("name_singer");
+                            String name_music = musicUP.getString("name_music");
+                            String category = musicUP.getString("category");
+                            String src_music = musicUP.getString("src_music");
+                            String link_mv = musicUP.getString("link_mv");
+                            String image_music = musicUP.getString("image_music");
 
-                        String id_music = musicUP.getString("_id");
-                        String name_singer = musicUP.getString("name_singer");
-                        String name_music = musicUP.getString("name_music");
-                        String category = musicUP.getString("category");
-                        String src_music = musicUP.getString("src_music");
-                        String link_mv = musicUP.getString("link_mv");
-                        String image_music = musicUP.getString("image_music");
-
-                        MusicUpload musicUpload = new MusicUpload(id_music, name_singer, image_music, name_music, category, src_music, link_mv);
-                        musicUploads.add(musicUpload);
+                            MusicUpload musicUpload = new MusicUpload(id_music, name_singer, image_music, name_music, category, src_music, link_mv);
+                            musicUploads.add(musicUpload);
+                        }
+                        countDownLatch.countDown();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                    countDownLatch.countDown();
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
             }
         });
@@ -138,10 +141,21 @@ public class MusicUploadImp implements MusicUploadDao {
             // Tiếp tục xử lý với mảng byte của hình ảnh và âm thanh
             RequestBody body = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
-                    .addFormDataPart("image_music", "image.jpg", RequestBody.create(MediaType.parse("application/octet-stream"), imageBytes))
-                    .addFormDataPart("src_music", "audio.mp3", RequestBody.create(MediaType.parse("application/octet-stream"), audioBytes))
+                    .addFormDataPart("image_music", "image.jpg", RequestBody.create(imageBytes,MediaType.parse("image/*")))
+                    .addFormDataPart("src_music", "audio.mp3", RequestBody.create(audioBytes,MediaType.parse("audio/*")))
                     .addFormDataPart("upload", uploadData.toString())
                     .build();
+//            File fileMusic = new File(src_music);
+//            File fileImage = new File(image_music);
+//            MultipartBody.Builder builder = new MultipartBody.Builder()
+//                    .setType(MultipartBody.FORM)
+//                    .addFormDataPart("name_music", name_music)
+//                    .addFormDataPart("name_singer", name_singer)
+//                    .addFormDataPart("category", category)
+//                    .addFormDataPart("link_mv", link_mv)
+//                    .addFormDataPart("src_music", fileMusic.getName(), RequestBody.create(fileMusic,MediaType.parse("audio/*")))
+//                    .addFormDataPart("image_music", fileImage.getName(), RequestBody.create(fileImage,MediaType.parse("image/*")));
+//            RequestBody requestBody = builder.build();
             Request request = new Request.Builder()
                     .url(url)
                     .header("Authorization", "Bearer " + accessToken)
