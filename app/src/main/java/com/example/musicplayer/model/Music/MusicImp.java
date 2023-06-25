@@ -172,16 +172,16 @@ public class MusicImp implements MusicDao{
             return;
         }
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        Log.d("TEST",sharedPreferences.toString());
+
         if(!sharedPreferences.contains("downloaded_list")) {
-            Log.d("TEST2","OK");
+
             JSONArray downloadedArray = new JSONArray();
             downloadedArray.put(idMusic);
             editor.putString("downloaded_list", downloadedArray.toString());
             editor.commit();
         }else {
             String jsonString = sharedPreferences.getString("downloaded_list", "");
-            Log.d("TEST2",jsonString);
+
             try {
                 JSONArray downloadedArray = new JSONArray(jsonString);
                 int index = -1;
@@ -204,7 +204,27 @@ public class MusicImp implements MusicDao{
             }
         }
     }
+    public  boolean isDownloadedMusic(String idMusic) {
+        //sharedPreferences = getSharePreferences("my_preferences")
+        if(sharedPreferences != null) {
+            try {
+                JSONArray downloadedArray = new JSONArray(sharedPreferences.getString("downloaded_list",""));
+                for(int i = 0 ;i < downloadedArray.length();i++) {
+                    if (idMusic.equals(downloadedArray.getString(i))) {
+                        return true;
 
+                    }
+                }
+                return false;
+            }catch (JSONException e) {
+                e.printStackTrace();
+                return false;
+            }
+
+        }
+
+        return false;
+    }
     public CompletableFuture<ArrayList<Music>> getFavoriteMusics() {
         OkHttpClient client = new OkHttpClient();
         CompletableFuture<ArrayList<Music>> future = new CompletableFuture<>();

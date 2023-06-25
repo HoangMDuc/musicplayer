@@ -52,6 +52,7 @@ public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapte
 
     private Activity activity;
     PlayListImp pli;
+    MusicImp musicImp;
     PlayListAdapter playListAdapter;
     TextView sg_tv,mn_tv,tv_like,download_tv;
     ImageButton add_playlist_btn,like_btn;
@@ -108,15 +109,17 @@ public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapte
 
                 download_btn = view1.findViewById(R.id.download_btn);
                 download_tv = view1.findViewById(R.id.download_tv);
-
-                if (DownloadedMusicActivity.isDownloadedMusic(myMusic.get_id())){
+                musicImp = new MusicImp(sharedPreferences);
+                if (musicImp.isDownloadedMusic(myMusic.get_id())){
                     download_btn.setImageResource(R.drawable.download_purple);
+                    Log.d("Đã tải xuống",myMusic.get_id());
                     download_tv.setText("Đã tải xuống");
                 } else {
-                    download_btn.setImageResource(R.drawable.download_white);
+                    download_btn.setImageResource(R.drawable.download_black);
+                    Log.d("Chưa tải xuống",myMusic.get_id());
                     download_tv.setText("Tải xuống");
                 }
-                Log.d("download", DownloadedMusicActivity.isDownloadedMusic(myMusic.get_id())+"");
+                Log.d("download", musicImp.isDownloadedMusic(myMusic.get_id())+"");
 
                 tv_like.setText("Xóa khỏi danh sách yêu thích");
                 sg_tv.setText(myMusic.getName_singer());

@@ -69,24 +69,5 @@ public class DownloadedMusicActivity extends AppCompatActivity {
         adapter = new DownloadedMusicAdapter(List);
         recyclerView.setAdapter(adapter);
     }
-    public static boolean isDownloadedMusic(String idMusic) {
-        if(sharedPreferences != null) {
-            try {
-                JSONArray downloadedArray = new JSONArray(sharedPreferences.getString("downloaded_list",""));
-                for(int i = 0 ;i < downloadedArray.length();i++) {
 
-                    if (idMusic.equals(downloadedArray.getString(i))) {
-                        return true;
-                    }
-                }
-                return false;
-            }catch (JSONException e) {
-                e.printStackTrace();
-                return false;
-            }
-
-        }
-
-        return false;
-    }
 }
