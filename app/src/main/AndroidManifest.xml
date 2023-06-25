@@ -21,6 +21,9 @@ xmlns:tools="http://schemas.android.com/tools">
     android:theme="@style/Theme.Musicplayer"
     tools:targetApi="31">
     <activity
+        android:name=".AccountActivity"
+        android:exported="false"/>
+    <activity
         android:name=".PlayerActivity"
         android:exported="false" />
     <activity
@@ -67,6 +70,7 @@ xmlns:tools="http://schemas.android.com/tools">
 
         </intent-filter>
     </receiver>
+
 </application>
 
 </manifest>

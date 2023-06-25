@@ -53,10 +53,9 @@ public class PlayListSongAdapter extends RecyclerView.Adapter<PlayListSongAdapte
     private OnItemClickListener  listener;
     private Activity activity;
     LinearLayout remove_from_playlist;
-    TextView sg_tv,mn_tv,favorite_tv;
-    ImageView music_image;
+    TextView sg_tv,mn_tv,favorite_tv,download_tv;
+    ImageView music_image,download_btn;
     ImageButton  like_btn, add_playlist_btn;
-    LinearLayout download_btn;
     public interface OnItemClickListener {
         void onItemClick(int position);
     }
@@ -93,6 +92,14 @@ public class PlayListSongAdapter extends RecyclerView.Adapter<PlayListSongAdapte
 
 
         Picasso.get().load(myMusic.getImage_music()).into(holder.music_image);
+
+        MusicImp mi = new MusicImp(sharedPreferences);
+        if (mi.isDownloadedMusic(myMusic.get_id())){
+            holder.download_img.setImageResource(R.drawable.download_purple);
+        } else {
+            holder.download_img.setImageResource(R.drawable.download_white);
+        }
+
         holder.constraintLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -111,7 +118,16 @@ public class PlayListSongAdapter extends RecyclerView.Adapter<PlayListSongAdapte
                 favorite_tv = (TextView) view1.findViewById(R.id.favorite_tv);
                 music_image = (ImageView) view1.findViewById(R.id.song_image);
                 like_btn = (ImageButton) view1.findViewById(R.id.like_btn);
-                download_btn=view1.findViewById(R.id.download_layout);
+                download_btn=view1.findViewById(R.id.download_btn);
+                download_tv = view1.findViewById(R.id.download_tv);
+
+                if (mi.isDownloadedMusic(myMusic.get_id())){
+                    download_btn.setImageResource(R.drawable.download_purple);
+                    download_tv.setText("Đã tải xuống");
+                } else {
+                    download_btn.setImageResource(R.drawable.download_white);
+                    download_tv.setText("Tải xuống");
+                }
 
                 remove_from_playlist = (LinearLayout) view1.findViewById(R.id.remove_from_playlist);
                 remove_from_playlist.setVisibility(View.VISIBLE);
@@ -134,17 +150,27 @@ public class PlayListSongAdapter extends RecyclerView.Adapter<PlayListSongAdapte
 
 
                 download_btn.setOnClickListener(v -> {
-                    selectedMusic = myMusic;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        if (ContextCompat.checkSelfPermission(v.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                    PERMISSION_REQUEST_CODE);
+                    if (download_tv.getText().equals("Tải xuống")) {
+                        mi.addDownloadedMusic(myMusic.get_id());
+                        selectedMusic = myMusic;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            if (ContextCompat.checkSelfPermission(v.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                                ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                        PERMISSION_REQUEST_CODE);
+                            } else {
+                                StartDownload(activity, myMusic.getSrc_music(), myMusic);
+                            }
                         } else {
-                            StartDownload(activity, myMusic.getSrc_music(),myMusic);
+                            StartDownload(activity, myMusic.getSrc_music(), myMusic);
                         }
-                    } else {
-                        StartDownload(activity, myMusic.getSrc_music(), myMusic);
                     }
+                    else {
+                        Toast.makeText(activity, "Bài hát đã được tải xuống thiết bị rồi", Toast.LENGTH_SHORT).show();
+                    }
+                    if (mi.isDownloadedMusic(myMusic.get_id())){
+                        holder.download_img.setImageResource(R.drawable.download_purple);
+                    }
+                    popupWindow.dismiss();
                 });
 
 
@@ -301,7 +327,7 @@ public class PlayListSongAdapter extends RecyclerView.Adapter<PlayListSongAdapte
         return listData.size();
     }
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public ImageView music_image;
+        public ImageView music_image,download_img;
         public TextView song_name, singer_name;
         public ImageButton option_btn;
         public ConstraintLayout constraintLayout;
@@ -311,7 +337,7 @@ public class PlayListSongAdapter extends RecyclerView.Adapter<PlayListSongAdapte
             this.music_image = (ImageView) itemView.findViewById(R.id.song_image);
             this.singer_name = (TextView) itemView.findViewById(R.id.singer_name);
             this.song_name = (TextView) itemView.findViewById(R.id.song_name);
-
+            this.download_img = (ImageView) itemView.findViewById(R.id.download_btn);
             this.constraintLayout = (ConstraintLayout) itemView.findViewById(R.id.playlist_song_item);
             this.option_btn = (ImageButton) itemView.findViewById(R.id.option_btn);
         }

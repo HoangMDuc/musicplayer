@@ -165,7 +165,7 @@ public class MusicImp implements MusicDao{
     }
 
     @Override
-    public void toggleDownloadedMusic(String idMusic) {
+    public void addDownloadedMusic(String idMusic) {
 
         if(sharedPreferences == null) {
 
@@ -184,18 +184,7 @@ public class MusicImp implements MusicDao{
 
             try {
                 JSONArray downloadedArray = new JSONArray(jsonString);
-                int index = -1;
-                for(int i = 0; i< downloadedArray.length(); i++) {
-                    if(idMusic.equals(downloadedArray.getString(i))) {
-                        index = i;
-                        break;
-                    }
-                }
-                if(index != -1 ) {
-                    downloadedArray.remove(index);
-                }else {
-                    downloadedArray.put(idMusic);
-                }
+                downloadedArray.put(idMusic);
 
                 editor.putString("downloaded_list", downloadedArray.toString());
                 editor.commit();
@@ -204,6 +193,37 @@ public class MusicImp implements MusicDao{
             }
         }
     }
+
+    @Override
+    public void removeDownloadedMusic(String idMusic) {
+        if(sharedPreferences == null) {
+
+            return;
+        }
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        try {
+            String jsonString = sharedPreferences.getString("downloaded_list", "");
+            JSONArray favoriteArray = new JSONArray(jsonString);
+            int index = -1;
+            for(int i = 0; i< favoriteArray.length();i++) {
+                if(idMusic.equals(favoriteArray.getString(i))) {
+                    index = i;
+                    break;
+                }
+            }
+            if(index != -1 ) {
+                favoriteArray.remove(index);
+
+                editor.putString("downloaded_list", favoriteArray.toString());
+                editor.commit();
+            }
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public  boolean isDownloadedMusic(String idMusic) {
         //sharedPreferences = getSharePreferences("my_preferences")
         if(sharedPreferences != null) {

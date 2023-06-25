@@ -52,7 +52,7 @@ public class SearchResultActivity extends AppCompatActivity {
         searchView.requestFocus();
         rcv = findViewById(R.id.rcvSearch);
         List = new ArrayList<>();
-        searchAdapter = new SearchAdapter(this, List);
+        searchAdapter = new SearchAdapter(this, List,getSharedPreferences("my_preferences",MODE_PRIVATE));
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         rcv.setLayoutManager(linearLayoutManager);
         rcv.setAdapter(searchAdapter);

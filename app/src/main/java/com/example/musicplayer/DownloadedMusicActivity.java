@@ -26,7 +26,7 @@ public class DownloadedMusicActivity extends AppCompatActivity {
     ImageButton imgBtnBack;
     DownloadedMusicAdapter adapter;
     ArrayList<Music> List;
-    private static SharedPreferences sharedPreferences;
+    SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

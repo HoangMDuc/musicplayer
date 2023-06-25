@@ -23,6 +23,7 @@ import com.example.musicplayer.custom_fragment.HomeFragment;
 //import com.example.musicplayer.custom_fragment.MiniPlayerFragment;
 import com.example.musicplayer.custom_fragment.ZingChartFragment;
 import com.example.musicplayer.model.Music.Music;
+import com.example.musicplayer.model.Music.MusicImp;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 
@@ -110,14 +111,6 @@ public class MainActivity extends AppCompatActivity {
     public static Music selectedMusic;
     public static final int PERMISSION_REQUEST_CODE = 10;
     public static void StartDownload(Context context, String url, Music music){
-        SharedPreferences sharedPreferences = context.getSharedPreferences("my_preferences", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        if (music.get_id().equals("0")) {
-            Toast.makeText(context.getApplicationContext(), "Bài hát đã được tải xuống thiết bị rồi",Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (!sharedPreferences.contains(music.get_id()+" is downdload")) {
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url))
                     .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI)
                     .setTitle("Download")
@@ -127,19 +120,14 @@ public class MainActivity extends AppCompatActivity {
             DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
             if (downloadManager != null) {
                 downloadManager.enqueue(request);
-                editor.putInt(music.get_id()+" is downdload",1);
-                editor.apply();
             }
-        }
-        else {
-            Toast.makeText(context.getApplicationContext(), "Bài hát đã được tải xuống thiết bị rồi",Toast.LENGTH_SHORT).show();
-        }
+
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
+        MusicImp mi = new MusicImp(sharedPreferences);
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Quyền truy cập bộ nhớ ngoài đã được cấp, bắt đầu tải xuống
@@ -150,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
 
             } else {
                 // Quyền truy cập bộ nhớ ngoài không được cấp, thông báo cho người dùng
+                mi.removeDownloadedMusic(selectedMusic.get_id());
                 Toast.makeText(this, "Ứng dụng cần quyền truy cập bộ nhớ để tải xuống.", Toast.LENGTH_SHORT).show();
             }
         }

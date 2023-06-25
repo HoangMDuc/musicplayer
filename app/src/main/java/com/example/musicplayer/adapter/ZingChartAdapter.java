@@ -54,10 +54,9 @@ public class ZingChartAdapter extends RecyclerView.Adapter<ZingChartAdapter.View
     PlayListImp pli;
     private PopupWindow popupWindow;
     private SharedPreferences sharedPreferences;
-    TextView sg_tv,mn_tv,favorite_tv;
-    ImageView music_image;
+    TextView sg_tv,mn_tv,favorite_tv, download_tv;
+    ImageView music_image, download_btn;
     ImageButton  like_btn, add_playlist_btn;
-    LinearLayout download;
 
     Activity activity;
     // RecyclerView recyclerView;
@@ -85,6 +84,7 @@ public class ZingChartAdapter extends RecyclerView.Adapter<ZingChartAdapter.View
         holder.getSinger_name().setText(myMusic.getName_singer());
         Picasso.get().load(myMusic.getImage_music()).into(holder.getImageView());
 //
+        MusicImp mi = new MusicImp(sharedPreferences);
 
         holder.getImageButton().setOnClickListener(new View.OnClickListener() {
             @Override
@@ -93,7 +93,8 @@ public class ZingChartAdapter extends RecyclerView.Adapter<ZingChartAdapter.View
                 View view1 = inflater.inflate(R.layout.music_popup, null);
 
 
-                download = view1.findViewById(R.id.download_layout);
+                download_btn = view1.findViewById(R.id.download_btn);
+                download_tv = view1.findViewById(R.id.download_tv);
                 sg_tv = (TextView) view1.findViewById(R.id.music_s_name_tv);
                 mn_tv = (TextView) view1.findViewById(R.id.musicname_tv);
                 favorite_tv = (TextView) view1.findViewById(R.id.favorite_tv);
@@ -106,6 +107,15 @@ public class ZingChartAdapter extends RecyclerView.Adapter<ZingChartAdapter.View
                     like_btn.setImageResource(R.drawable.favorite_dark);
                     favorite_tv.setText("Thêm vào danh sách yêu thích");
                 }
+
+                if (mi.isDownloadedMusic(myMusic.get_id())){
+                    download_btn.setImageResource(R.drawable.download_purple);
+                    download_tv.setText("Đã tải xuống");
+                } else {
+                    download_btn.setImageResource(R.drawable.download_white);
+                    download_tv.setText("Tải xuống");
+                }
+
                 add_playlist_btn = (ImageButton) view1.findViewById(R.id.add_playlist_btn);
 
 
@@ -118,18 +128,25 @@ public class ZingChartAdapter extends RecyclerView.Adapter<ZingChartAdapter.View
                 popupWindow.showAtLocation(view.getRootView(), Gravity.BOTTOM, 0, 0);
 
 
-                download.setOnClickListener(v -> {
-                    selectedMusic = myMusic;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        if (ContextCompat.checkSelfPermission(v.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                    PERMISSION_REQUEST_CODE);
+                download_btn.setOnClickListener(v -> {
+                    if (download_tv.getText().equals("Tải xuống")) {
+                        mi.addDownloadedMusic(myMusic.get_id());
+                        selectedMusic = myMusic;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            if (ContextCompat.checkSelfPermission(v.getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                                ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                        PERMISSION_REQUEST_CODE);
+                            } else {
+                                StartDownload(activity, myMusic.getSrc_music(), myMusic);
+                            }
                         } else {
-                            StartDownload(activity, myMusic.getSrc_music(),myMusic);
+                            StartDownload(activity, myMusic.getSrc_music(), myMusic);
                         }
-                    } else {
-                        StartDownload(activity, myMusic.getSrc_music(), myMusic);
                     }
+                    else {
+                        Toast.makeText(activity, "Bài hát đã được tải xuống thiết bị rồi", Toast.LENGTH_SHORT).show();
+                    }
+                    popupWindow.dismiss();
                 });
 
 
