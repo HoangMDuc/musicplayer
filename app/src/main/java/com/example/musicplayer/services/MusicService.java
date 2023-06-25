@@ -14,10 +14,13 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.util.Log;
+import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
@@ -27,6 +30,7 @@ import com.example.musicplayer.PlayerActivity;
 import com.example.musicplayer.R;
 import com.example.musicplayer.model.Music.Music;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -185,19 +189,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     public void showNotification(){
 
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    bitmap= Picasso.get().load(listMusics.get(position).getImage_music()).get();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        thread.start();
-        Intent intent = new Intent(this, PlayerActivity.class);
-        PendingIntent contentIntent =  PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         Intent prevIntent = new Intent(this, NotificationReceiver.class)
                 .setAction(ACTION_PREVIOUS);
         PendingIntent prevPending =  PendingIntent.getBroadcast(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -211,23 +202,43 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         Intent closeIntent = new Intent(this, NotificationReceiver.class)
                 .setAction(ACTION_CLOSE);
         PendingIntent closePending = PendingIntent.getBroadcast(this,0, closeIntent,PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        int playPauseBtn = isPlaying() ? R.drawable.baseline_pause_circle_dark_24 : R.drawable.baseline_play_circle_dark_24;
-        Notification notification = new NotificationCompat.Builder(this,CHANNEL_ID)
-                .setLargeIcon(bitmap)
-                .setSmallIcon(playPauseBtn)
-                .setContentTitle(getCurrentSong().getName_music())
-                .setContentText(getCurrentSong().getName_singer())
-                .addAction(R.drawable.baseline_skip_previous_24,"Previous",prevPending)
-                .addAction(playPauseBtn,"Pause",pausePending)
-                .addAction(R.drawable.baseline_skip_next_24,"Next",nextPending)
-                .addAction(R.drawable.baseline_close_24,"Close",closePending)
-                .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
-                        .setMediaSession(mediaSessionCompat.getSessionToken()))
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setSilent(true)
-                .build();
-        startForeground(2,notification);
+        Picasso.get().load(listMusics.get(position).getImage_music()).into(new Target() {
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+
+                int playPauseBtn = isPlaying() ? R.drawable.baseline_pause_circle_dark_24 : R.drawable.baseline_play_circle_dark_24;
+                Notification notification = new NotificationCompat.Builder(getBaseContext(),CHANNEL_ID)
+                        .setLargeIcon(bitmap)
+                        .setSmallIcon(playPauseBtn)
+                        .setContentTitle(getCurrentSong().getName_music())
+                        .setContentText(getCurrentSong().getName_singer())
+                        .addAction(R.drawable.baseline_skip_previous_24,"Previous",prevPending)
+                        .addAction(playPauseBtn,"Pause",pausePending)
+                        .addAction(R.drawable.baseline_skip_next_24,"Next",nextPending)
+                        .addAction(R.drawable.baseline_close_24,"Close",closePending)
+                        .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
+                                .setMediaSession(mediaSessionCompat.getSessionToken()))
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                        .setSilent(true)
+                        .build();
+                startForeground(2,notification);
+
+            }
+
+            @Override
+            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+
+            }
+
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+            }
+        });
+
+
+
     }
     public void hiddenNotification() {
         stopForeground(true);
@@ -253,7 +264,5 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             actionPlaying.playPauseBtnClicked();
         }
     }
-//    public boolean isReadyToPlay() {
-//        return mediaPlayer != null ? true : false;
-//    }
+
 }

@@ -647,10 +647,11 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
         currentIndex = (currentIndex - 1 + listData.size()) % listData.size();
         musicService.create(currentIndex);
         musicService.start();
-        mi.addToHistory(getCurrentSong().get_id());
+        //mi.addToHistory(getCurrentSong().get_id());
         musicService.OnCompleted();
         musicService.showNotification();
         playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
+        Toast.makeText(this,"Test",Toast.LENGTH_SHORT).show();
         setCurrentSong();
 
     }
@@ -662,7 +663,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
         currentIndex = (currentIndex + 1) % listData.size();
         musicService.create(currentIndex);
         musicService.start();
-        mi.addToHistory(getCurrentSong().get_id());
+        //mi.addToHistory(getCurrentSong().get_id());
         musicService.OnCompleted();
         musicService.showNotification();
         playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
