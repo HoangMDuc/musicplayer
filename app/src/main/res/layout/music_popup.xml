@@ -100,7 +100,7 @@
             android:layout_height="30dp"
             android:background="@android:color/transparent"
             android:scaleType="fitXY"
-            app:srcCompat="@mipmap/download_white" />
+            app:srcCompat="@drawable/download_black" />
 
         <TextView
             android:id="@+id/download_tv"

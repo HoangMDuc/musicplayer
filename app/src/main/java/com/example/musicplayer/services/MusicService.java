@@ -11,6 +11,7 @@ import static com.example.musicplayer.PlayerActivity.playlist;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -29,6 +30,7 @@ import com.example.musicplayer.NotificationReceiver;
 import com.example.musicplayer.PlayerActivity;
 import com.example.musicplayer.R;
 import com.example.musicplayer.model.Music.Music;
+import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -87,38 +89,48 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        int myPosition = intent.getIntExtra("currentIndex",-1);
+
         String actionName = intent.getStringExtra("ActionName");
-        if(playlist != null) {
-            setListMusics(playlist);
-        }
-        if(myPosition != - 1) {
-            playMedia(myPosition);
-        }
-//        putLastPlayedToSharePreferences();
+        if(actionName != null && actionName.equals("ACTION_PLAY_NEW_MUSIC")) {
+            int myPosition = intent.getIntExtra("currentIndex",-1);
+            if(playlist != null) {
+                setListMusics(playlist);
+            }
+            if(myPosition != - 1) {
+                playMedia(myPosition);
+            }
+            putLastPlayedToSharePreferences();
+        }else {
+            if(actionName != null) {
+                switch (actionName) {
+                    case ACTION_PLAY:
+                        pauseAndPlay();
+                        break;
+                    case ACTION_NEXT:
+                        nextMusic();
+                        break;
+                    case ACTION_PREVIOUS:
+                        previousMusic();
+                        break;
+                    case ACTION_CLOSE:
+                        hiddenNotification();
+                        mediaPlayer.stop();
 
-        if(actionName != null) {
-            switch (actionName) {
-                case ACTION_PLAY:
-                    pauseAndPlay();
-                    break;
-                case ACTION_NEXT:
-                    nextMusic();
-                    break;
-                case ACTION_PREVIOUS:
-                    if(actionPlaying != null) {
-                        actionPlaying.prevBtnClicked();
-                    }
-                    break;
-                case ACTION_CLOSE:
-                    hiddenNotification();
-                    mediaPlayer.stop();
-
-                    break;
+                        break;
+                }
             }
         }
+
+
         return START_STICKY;
     }
+
+    private void previousMusic() {
+        if(actionPlaying != null) {
+            actionPlaying.prevBtnClicked();
+        }
+    }
+
     public void setListMusics(ArrayList<Music> listMusics) {
         this.listMusics = listMusics;
     }
@@ -188,7 +200,15 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
     public void showNotification(){
-
+//// Create an Intent for the activity you want to start
+//        Intent resultIntent = new Intent(this, PlayerActivity.class);
+//// Create the TaskStackBuilder and add the intent, which inflates the back stack
+//        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+//        stackBuilder.addNextIntentWithParentStack(resultIntent);
+//// Get the PendingIntent containing the entire back stack
+//        PendingIntent resultPendingIntent =
+//                stackBuilder.getPendingIntent(0,
+//                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Intent prevIntent = new Intent(this, NotificationReceiver.class)
                 .setAction(ACTION_PREVIOUS);
         PendingIntent prevPending =  PendingIntent.getBroadcast(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -210,6 +230,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 Notification notification = new NotificationCompat.Builder(getBaseContext(),CHANNEL_ID)
                         .setLargeIcon(bitmap)
                         .setSmallIcon(playPauseBtn)
+//                        .setContentIntent(resultPendingIntent)
                         .setContentTitle(getCurrentSong().getName_music())
                         .setContentText(getCurrentSong().getName_singer())
                         .addAction(R.drawable.baseline_skip_previous_24,"Previous",prevPending)
@@ -223,7 +244,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                         .setSilent(true)
                         .build();
                 startForeground(2,notification);
-
             }
 
             @Override
@@ -243,21 +263,20 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public void hiddenNotification() {
         stopForeground(true);
     }
-//    public void putLastPlayedToSharePreferences() {
-//        sharedPreferences = getSharedPreferences("LAST_PLAYED",MODE_PRIVATE);
-//        SharedPreferences.Editor editor = sharedPreferences.edit();
-//        editor.putInt("position",position);
-//        String jsonArray = new Gson().toJson(listMusics);
-//        editor.putString("listMusics",jsonArray);
-//        editor.commit();
-//    }
+    public void putLastPlayedToSharePreferences() {
+        sharedPreferences = getSharedPreferences("LAST_PLAYED",MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("position",position);
+        String jsonArray = new Gson().toJson(listMusics);
+        editor.putString("listMusics",jsonArray);
+        editor.commit();
+    }
 
     public void nextMusic() {
         if(actionPlaying != null) {
             actionPlaying.nextBtnClicked();
         }
     }
-
 
     public void pauseAndPlay() {
         if(actionPlaying != null) {

@@ -112,7 +112,7 @@ public class ZingChartAdapter extends RecyclerView.Adapter<ZingChartAdapter.View
                     download_btn.setImageResource(R.drawable.download_purple);
                     download_tv.setText("Đã tải xuống");
                 } else {
-                    download_btn.setImageResource(R.drawable.download_white);
+                    download_btn.setImageResource(R.drawable.download_black);
                     download_tv.setText("Tải xuống");
                 }
 
@@ -290,6 +290,7 @@ public class ZingChartAdapter extends RecyclerView.Adapter<ZingChartAdapter.View
                 Intent intent = new Intent(view.getContext(), PlayerActivity.class);
                 intent.putExtra("ListMusic",listdata);
                 intent.putExtra("currentIndex",position);
+                intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 view.getContext().startActivity(intent);
             }
         });

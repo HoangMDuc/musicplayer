@@ -12,6 +12,7 @@ public class ApplicationClass extends Application {
     public static final String ACTION_NEXT = "ACTION_NEXT";
     public static final String ACTION_PLAY = "ACTION_PLAY";
     public static final String ACTION_CLOSE = "ACTION_CLOSE";
+    public static final String ACTION_PLAY_NEW_MUSIC = "ACTION_PLAY_NEW_MUSIC";
 
     @Override
     public void onCreate() {

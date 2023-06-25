@@ -100,7 +100,7 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.SearchView
                     download_btn.setImageResource(R.drawable.download_purple);
                     download_tv.setText("Đã tải xuống");
                 } else {
-                    download_btn.setImageResource(R.drawable.download_white);
+                    download_btn.setImageResource(R.drawable.download_black);
                     download_tv.setText("Tải xuống");
                 }
 

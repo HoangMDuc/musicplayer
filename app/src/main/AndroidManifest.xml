@@ -25,6 +25,7 @@ xmlns:tools="http://schemas.android.com/tools">
         android:exported="false"/>
     <activity
         android:name=".PlayerActivity"
+        android:parentActivityName=".MainActivity"
         android:exported="false" />
     <activity
         android:name=".DownloadedMusicActivity"

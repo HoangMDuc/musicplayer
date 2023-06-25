@@ -87,7 +87,7 @@ public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapte
         if (mi.isDownloadedMusic(myMusic.get_id())){
             holder.download_img.setImageResource(R.drawable.download_purple);
         } else {
-            holder.download_img.setImageResource(R.drawable.download_white);
+            holder.download_img.setImageResource(R.drawable.download_black);
         }
 
         holder.constraintLayout.setOnClickListener(new View.OnClickListener() {
@@ -120,7 +120,7 @@ public class FavoriteSongAdapter extends RecyclerView.Adapter<FavoriteSongAdapte
                     download_btn.setImageResource(R.drawable.download_purple);
                     download_tv.setText("Đã tải xuống");
                 } else {
-                    download_btn.setImageResource(R.drawable.download_white);
+                    download_btn.setImageResource(R.drawable.download_black);
                     download_tv.setText("Tải xuống");
                 }
                 //Log.d("download", mi.isDownloadedMusic(myMusic.get_id())+"");

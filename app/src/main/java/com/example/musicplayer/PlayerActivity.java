@@ -1,5 +1,6 @@
 package com.example.musicplayer;
 
+import static com.example.musicplayer.ApplicationClass.ACTION_PLAY_NEW_MUSIC;
 import static com.example.musicplayer.MainActivity.PERMISSION_REQUEST_CODE;
 import static com.example.musicplayer.MainActivity.StartDownload;
 import static com.example.musicplayer.MainActivity.selectedMusic;
@@ -8,6 +9,7 @@ import static com.example.musicplayer.MainActivity.selectedMusic;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NavUtils;
 import androidx.core.content.ContextCompat;
 import androidx.palette.graphics.Palette;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -100,8 +102,11 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
         isRepeat = sharedPreferences.getBoolean("isRepeat", false);
         mi = new MusicImp(sharedPreferences);
         listData = (ArrayList<Music>) getIntent().getSerializableExtra("ListMusic");
+        Toast.makeText(this,"CREATE",Toast.LENGTH_SHORT).show();
         currentIndex = getIntent().getIntExtra("currentIndex", -1);
-        playlist = new ArrayList<>(listData);
+        if(listData != null) {
+            playlist = new ArrayList<>(listData);
+        }
         if(isShuffle) {
             Music currentSong = listData.get(currentIndex);
             int currentSongInPlaylist = findMusicInList(playlist,currentSong);
@@ -120,8 +125,8 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
         }
         Intent intent = new Intent(this, MusicService.class);
         intent.putExtra("currentIndex",currentIndex);
+        intent.putExtra("ActionName",ACTION_PLAY_NEW_MUSIC);
         startService(intent);
-
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -651,7 +656,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
         musicService.OnCompleted();
         musicService.showNotification();
         playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
-        Toast.makeText(this,"Test",Toast.LENGTH_SHORT).show();
+
         setCurrentSong();
 
     }
@@ -718,7 +723,9 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
 
     @Override
     protected void onDestroy() {
-
+        Toast.makeText(this,"DESTROY",Toast.LENGTH_SHORT).show();
         super.onDestroy();
     }
+
+
 }
