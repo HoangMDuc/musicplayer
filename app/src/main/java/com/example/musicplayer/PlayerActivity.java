@@ -11,6 +11,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NavUtils;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.palette.graphics.Palette;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,8 +23,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 
@@ -67,6 +70,7 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class PlayerActivity extends AppCompatActivity implements ServiceConnection, ActionPlaying {
@@ -106,6 +110,9 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
         currentIndex = getIntent().getIntExtra("currentIndex", -1);
         if(listData != null) {
             playlist = new ArrayList<>(listData);
+        }
+        if (mi.isDownloadedMusic(getCurrentSong().get_id())){
+            download_btn.setImageResource(R.drawable.download_purple);
         }
         if(isShuffle) {
             Music currentSong = listData.get(currentIndex);
@@ -477,20 +484,28 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
             }
         });
         download_btn.setOnClickListener(v -> {
-            Toast.makeText(getBaseContext(),"clicked",Toast.LENGTH_SHORT).show();
-            selectedMusic = getCurrentSong();
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (ContextCompat.checkSelfPermission(v.getContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            if (!mi.isDownloadedMusic(getCurrentSong().get_id())) {
+                mi.addDownloadedMusic(getCurrentSong().get_id());
+                selectedMusic = getCurrentSong();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (ContextCompat.checkSelfPermission(v.getContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
-                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                            PERMISSION_REQUEST_CODE);
+                        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                PERMISSION_REQUEST_CODE);
+                    } else {
+
+                        StartDownload(this, selectedMusic.getSrc_music(), selectedMusic);
+                    }
                 } else {
 
                     StartDownload(this, selectedMusic.getSrc_music(), selectedMusic);
                 }
-            } else {
-
-                StartDownload(this, selectedMusic.getSrc_music(), selectedMusic);
+                if (mi.isDownloadedMusic(getCurrentSong().get_id())) {
+                    download_btn.setImageResource(R.drawable.download_purple);
+                }
+            }
+            else {
+                Toast.makeText(getBaseContext(), "Bài hát đã được tải xuống thiết bị rồi", Toast.LENGTH_SHORT).show();
             }
         });
         like_playing_music.setOnClickListener(new View.OnClickListener() {

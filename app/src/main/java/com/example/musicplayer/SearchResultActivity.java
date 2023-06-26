@@ -65,6 +65,7 @@ public class SearchResultActivity extends AppCompatActivity {
                 // ẩn bàn phím khi người dùng hoàn tất tìm kiếm
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(searchView.getWindowToken(), 0);
+                searchView.clearFocus();
                 return true;
             }
 
