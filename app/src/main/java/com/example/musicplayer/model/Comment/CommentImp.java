@@ -134,7 +134,52 @@ public class CommentImp implements CommentDao{
 
     }
     @Override
-    public void update(String id_music, String content) {
+    public void update(String id_cmt, String Content) {
+        OkHttpClient client = new OkHttpClient();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        String url = CommentAPI + "update-comment-by-id";
+        String _id = id_cmt;
+        String content = Content;
+
+
+        RequestBody body = new FormBody.Builder()
+                .add("content", content)
+                .add("_id", _id)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .put(body)
+                .build();
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                        e.printStackTrace();
+                        countDownLatch.countDown();
+                    }
+
+                    @Override
+                    public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+
+                        if (!response.isSuccessful())
+                            throw new IOException("Unexpected code " + response);
+                        countDownLatch.countDown();
+                    }
+                });
+            }
+        });
+
+        thread.start();
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 
