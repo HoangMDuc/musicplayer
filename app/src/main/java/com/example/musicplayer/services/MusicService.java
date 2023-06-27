@@ -21,13 +21,9 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.media.session.MediaSessionCompat;
-import android.util.Log;
-import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
-import com.example.musicplayer.ActionPlaying;
-import com.example.musicplayer.FavoriteMusicActivity;
 import com.example.musicplayer.MusicServiceRepo;
 import com.example.musicplayer.NotificationReceiver;
 import com.example.musicplayer.PlayerActivity;
