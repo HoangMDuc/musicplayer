@@ -24,7 +24,6 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.musicplayer.ActionPlaying;
 import com.example.musicplayer.MusicServiceRepo;
 import com.example.musicplayer.PlayerActivity;
 import com.example.musicplayer.R;
@@ -82,11 +81,9 @@ public class MiniPlayerFragment extends Fragment implements ServiceConnection {
                         currentIndex = (currentIndex+1) % listMusics.size();
                         break;
                     case "com.example.app.PLAY_OR_PAUSE":
-//                        if(musicService.isPlaying()) {
-//                            pause_play_btn.setImageResource(R.drawable.baseline_play_circle_dark_24);
-//                        }else {
-//                            pause_play_btn.setImageResource(R.drawable.baseline_pause_circle_dark_24);
-//                        }
+                        break;
+                    case "com.example.app.HIDDEN_NOTIFICATION":
+                        //pause_play_btn.setImageResource(R.drawable.baseline_play_circle_24);
                         break;
 
                 }
@@ -120,13 +117,23 @@ public class MiniPlayerFragment extends Fragment implements ServiceConnection {
         currentIndex = sharedPreferences.getInt("position",-1);
         // Chuyển chuỗi JSON thành mảng
         listMusics = new Gson().fromJson(jsonArray, type);
-        Toast.makeText(getContext(),(musicService != null) +"", Toast.LENGTH_SHORT).show();
         setCurrentSong();
         next_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(musicService != null) {
+                if(musicService != null && musicService.isReadyToPlay()) {
                     musicService.nextMusic();
+                }else {
+                    if(musicService == null || !musicService.isReadyToPlay()) {
+                        currentIndex = currentIndex + 1;
+                        Intent intent = new Intent(getContext(), MusicService.class);
+                        intent.putExtra("currentIndex",currentIndex);
+                        intent.putExtra("playlist",listMusics);
+                        intent.putExtra("ActionName","ACTION_PLAY_NEW_MUSIC");
+                        getContext().startService(intent);
+                        setCurrentSong();
+                        pause_play_btn.setImageResource(R.drawable.baseline_pause_circle_dark_24);
+                    }
                 }
             }
         });
@@ -134,7 +141,7 @@ public class MiniPlayerFragment extends Fragment implements ServiceConnection {
         pause_play_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getContext(),(musicService != null) + "",Toast.LENGTH_SHORT).show();
+
                 if(musicService != null && musicService.isReadyToPlay()) {
                     musicService.pauseAndPlay();
                 }
@@ -170,6 +177,7 @@ public class MiniPlayerFragment extends Fragment implements ServiceConnection {
             intentFilter.addAction("com.example.app.PREVIOUS_SONG");
             intentFilter.addAction("com.example.app.NEXT_SONG");
             intentFilter.addAction("com.example.app.PLAY_OR_PAUSE");
+            intentFilter.addAction("com.example.app.HIDDEN_NOTIFICATION");
             getContext().registerReceiver(controlSongReceiver,intentFilter);
         }
         super.onResume();
@@ -192,7 +200,7 @@ public class MiniPlayerFragment extends Fragment implements ServiceConnection {
         MusicServiceRepo.setMusicService(musicService);
         MusicServiceRepo.setCurrentIndex(currentIndex);
         MusicServiceRepo.setPlaylist(listMusics);
-        Toast.makeText(getContext(),"CONNECTED",Toast.LENGTH_SHORT).show();
+
     }
     @Override
     public void onServiceDisconnected(ComponentName name) {

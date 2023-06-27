@@ -764,7 +764,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
     public void onServiceConnected(ComponentName name, IBinder service) {
         MusicService.MyBinder myBinder = (MusicService.MyBinder) service;
         musicService = myBinder.getMusicService();
-        Log.d("onServiceConnected",(musicService != null) + "");
+
         mi.addToHistory(getCurrentSong().get_id());
         musicService.showNotification();
         MusicServiceRepo.setMusicService(musicService);
@@ -810,7 +810,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
 
     @Override
     protected void onDestroy() {
-        Toast.makeText(this, "DESTROY", Toast.LENGTH_SHORT).show();
+
         super.onDestroy();
     }
 

@@ -55,13 +55,11 @@ public class MusicService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-       // Toast.makeText(getBaseContext(), "BIND",Toast.LENGTH_SHORT).show();
         return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-       // Toast.makeText(getBaseContext(), "UNBIND",Toast.LENGTH_SHORT).show();
         return super.onUnbind(intent);
     }
 
@@ -222,8 +220,7 @@ public class MusicService extends Service {
         Intent closeIntent = new Intent(this, NotificationReceiver.class)
                 .setAction(ACTION_CLOSE);
         PendingIntent closePending = PendingIntent.getBroadcast(this,0, closeIntent,PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        Log.d("Currentindex sv", position + "");
-        Log.d("LM",listMusics.size() + "");
+
         Picasso.get().load(listMusics.get(position).getImage_music()).into(new Target() {
             @Override
             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
