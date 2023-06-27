@@ -9,9 +9,7 @@ import static com.example.musicplayer.MainActivity.selectedMusic;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NavUtils;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.palette.graphics.Palette;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -23,10 +21,8 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 
@@ -44,7 +40,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
@@ -70,74 +65,96 @@ import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class PlayerActivity extends AppCompatActivity implements ServiceConnection, ActionPlaying {
-    TextView song_name,artist_name,duration_played,duration_total;
+    TextView song_name, artist_name, duration_played, duration_total;
     ShapeableImageView cover_art;
-    ImageButton nextBtn,prevBtn,backBtn,shuffleBtn,repeatBtn,playPauseBtn;
+    ImageButton nextBtn, prevBtn, backBtn, shuffleBtn, repeatBtn, playPauseBtn;
     SeekBar seekBar;
     PopupWindow popupWindow;
     ConstraintLayout player;
     PlayListImp pli;
     MusicImp mi;
-    ImageButton playlist_btn,chat_btn,download_btn,add_playlist_btn,like_playing_music;
+    ImageButton playlist_btn, chat_btn, download_btn, add_playlist_btn, like_playing_music;
     public static ArrayList<Music> playlist;
     private PlayerSongAdapter adapter;
     private PlayListAdapter playListAdapter;
     public static ArrayList<Music> listData;
     int currentIndex = -1;
-    Thread playThread,nextThread,prevThread;
-    MusicService musicService;
+    Thread playThread, nextThread, prevThread;
+    MusicService musicService = MusicServiceRepo.getMusicService();
     SharedPreferences sharedPreferences;
     public static boolean isShuffle = false, isRepeat = false;
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
         initViews();
-        sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("my_preferences", MODE_PRIVATE);
         isShuffle = sharedPreferences.getBoolean("isRandom", false);
         isRepeat = sharedPreferences.getBoolean("isRepeat", false);
+        Log.d("MS", (musicService == null) + "");
         mi = new MusicImp(sharedPreferences);
-        listData = (ArrayList<Music>) getIntent().getSerializableExtra("ListMusic");
-        Toast.makeText(this,"CREATE",Toast.LENGTH_SHORT).show();
-        currentIndex = getIntent().getIntExtra("currentIndex", -1);
-        if(listData != null) {
-            playlist = new ArrayList<>(listData);
+        if (musicService == null) {
+            listData = (ArrayList<Music>) getIntent().getSerializableExtra("ListMusic");
+            currentIndex = getIntent().getIntExtra("currentIndex", -1);
+            if (listData != null) {
+                playlist = new ArrayList<>(listData);
+            }
+
+            Intent intent = new Intent(this, MusicService.class);
+            intent.putExtra("currentIndex", currentIndex);
+            intent.putExtra("ActionName", ACTION_PLAY_NEW_MUSIC);
+            startService(intent);
+        } else {
+            if (getIntent().hasExtra("currentIndex")) {
+                musicService.stop();
+                musicService.reset();
+                listData = (ArrayList<Music>) getIntent().getSerializableExtra("ListMusic");
+                currentIndex = getIntent().getIntExtra("currentIndex", -1);
+                if (listData != null) {
+                    playlist = new ArrayList<>(listData);
+                }
+                musicService.create(currentIndex);
+                musicService.start();
+                mi.addToHistory(getCurrentSong().get_id());
+                musicService.OnCompleted();
+                musicService.showNotification();
+                playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
+                setCurrentSong();
+            } else {
+                listData = MusicServiceRepo.getListData();
+                playlist = MusicServiceRepo.getPlaylist();
+                currentIndex = MusicServiceRepo.getCurrentIndex();
+                setCurrentSong();
+            }
+
+
         }
-        if (mi.isDownloadedMusic(getCurrentSong().get_id())){
-            download_btn.setImageResource(R.drawable.download_purple);
-        }
-        if(isShuffle) {
+//        if (mi.isDownloadedMusic(getCurrentSong().get_id())) {
+//            download_btn.setImageResource(R.drawable.download_purple);
+//        }
+        if (isShuffle) {
             Music currentSong = listData.get(currentIndex);
-            int currentSongInPlaylist = findMusicInList(playlist,currentSong);
+            int currentSongInPlaylist = findMusicInList(playlist, currentSong);
             playlist.remove(currentSongInPlaylist);
             Collections.shuffle(playlist);
-            playlist.add(0,currentSong);
+            playlist.add(0, currentSong);
             currentIndex = 0;
             shuffleBtn.setImageResource(R.drawable.baseline_shuffle_on_24);
         }
-        if(isRepeat) {
+        if (isRepeat) {
             repeatBtn.setImageResource(R.drawable.baseline_repeat_one_24);
         }
-        if(musicService != null ) {
-            musicService.stop();
-            musicService.reset();
-        }
-        Intent intent = new Intent(this, MusicService.class);
-        intent.putExtra("currentIndex",currentIndex);
-        intent.putExtra("ActionName",ACTION_PLAY_NEW_MUSIC);
-        startService(intent);
+        MusicServiceRepo.setListData(listData);
+        MusicServiceRepo.setPlaylist(playlist);
+        MusicServiceRepo.setCurrentIndex(currentIndex);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if(musicService != null && fromUser) {
+                if (musicService != null && fromUser) {
                     musicService.seekTo(progress);
                 }
             }
@@ -155,11 +172,11 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if(musicService != null) {
+                if (musicService != null) {
                     seekBar.setProgress(musicService.getCurrentPosition());
                     duration_played.setText(convertToMMSS(musicService.getCurrentPosition() + ""));
                 }
-                new Handler().postDelayed(this,100);
+                new Handler().postDelayed(this, 100);
             }
         });
         shuffleBtn.setOnClickListener(new View.OnClickListener() {
@@ -167,29 +184,29 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
             public void onClick(View v) {
 
                 isShuffle = !isShuffle;
-                if(isShuffle) {
+                if (isShuffle) {
                     Music currentSong = getCurrentSong();
                     playlist.remove(currentIndex);
                     Collections.shuffle(playlist);
-                    playlist.add(0,currentSong);
+                    playlist.add(0, currentSong);
                     currentIndex = 0;
                     shuffleBtn.setImageResource(R.drawable.baseline_shuffle_on_24);
-                }else {
+                } else {
                     Music currentSong = getCurrentSong();
-                    int currentSongInList = findMusicInList(listData,currentSong);
+                    int currentSongInList = findMusicInList(listData, currentSong);
                     currentIndex = currentSongInList;
                     playlist = new ArrayList<>(listData);
                     shuffleBtn.setImageResource(R.drawable.baseline_shuffle_24);
                 }
                 musicService.setListMusics(playlist);
-                if(sharedPreferences !=  null) {
+                if (sharedPreferences != null) {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean("isRandom",isShuffle);
+                    editor.putBoolean("isRandom", isShuffle);
                     editor.commit();
-                }else {
-                    sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
+                } else {
+                    sharedPreferences = getSharedPreferences("my_preferences", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean("isRandom",isShuffle);
+                    editor.putBoolean("isRandom", isShuffle);
                     editor.commit();
                 }
             }
@@ -197,15 +214,15 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
         repeatBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(isRepeat) {
+                if (isRepeat) {
                     isRepeat = false;
                     repeatBtn.setImageResource(R.drawable.baseline_repeat_24);
-                }else {
+                } else {
                     isRepeat = true;
                     repeatBtn.setImageResource(R.drawable.baseline_repeat_one_24);
                 }
                 SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putBoolean("isRepeat",isRepeat);
+                editor.putBoolean("isRepeat", isRepeat);
                 editor.commit();
             }
         });
@@ -224,7 +241,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                 adapter.setOnItemClickListener(new PlayerSongAdapter.OnItemClickListener() {
                     @Override
                     public void onItemClick(int position) {
-                        if(isShuffle) {
+                        if (isShuffle) {
                             currentIndex = position;
                             Music currentSong = getCurrentSong();
                             playlist.remove(position);
@@ -236,7 +253,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                             musicService.start();
 
 
-                        }else {
+                        } else {
                             currentIndex = position;
                             setCurrentSong();
                             musicService.create(currentIndex);
@@ -244,7 +261,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
 
                         }
                         mi.addToHistory(getCurrentSong().get_id());
-                        if(popupWindow !=  null && popupWindow.isShowing()) {
+                        if (popupWindow != null && popupWindow.isShowing()) {
                             popupWindow.dismiss();
                         }
                     }
@@ -296,7 +313,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                 ImageButton back_btn = (ImageButton) view1.findViewById(R.id.back_btn);
                 int width = LinearLayout.LayoutParams.MATCH_PARENT;
                 int height = ViewGroup.LayoutParams.MATCH_PARENT;
-                popupWindow = new PopupWindow(view1,width, height, true);
+                popupWindow = new PopupWindow(view1, width, height, true);
                 popupWindow.showAtLocation(view.getRootView(), Gravity.BOTTOM, 0, 0);
                 back_btn.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -316,14 +333,14 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                 createNewPlaylistLayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        if(popupWindow != null) {
+                        if (popupWindow != null) {
                             popupWindow.dismiss();
                         }
                         LayoutInflater inflater1 = (LayoutInflater) view.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                         View view2 = inflater1.inflate(R.layout.create_new_playlist, null);
                         int width = LinearLayout.LayoutParams.MATCH_PARENT;
                         int height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                        popupWindow = new PopupWindow(view2,width, height, true);
+                        popupWindow = new PopupWindow(view2, width, height, true);
                         popupWindow.showAtLocation(view.getRootView(), Gravity.CENTER, 0, 0);
                         EditText playlist_name = (EditText) view2.findViewById(R.id.playlist_name);
                         TextView submit = (TextView) view2.findViewById(R.id.submit_tv);
@@ -337,10 +354,10 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                         submit.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                if(sharedPreferences != null) {
+                                if (sharedPreferences != null) {
                                     new PlayListImp(sharedPreferences.getString("accessToken", ""))
-                                            .create(getCurrentSong().get_id(),playlist_name.getText().toString())
-                                            .thenAccept( playList -> {
+                                            .create(getCurrentSong().get_id(), playlist_name.getText().toString())
+                                            .thenAccept(playList -> {
                                                 runOnUiThread(new Runnable() {
                                                     @Override
                                                     public void run() {
@@ -367,16 +384,18 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                             @Override
                             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                             }
+
                             @Override
                             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                                if(s.length() > 0) {
+                                if (s.length() > 0) {
                                     submit.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.purple_primary));
                                     submit.setClickable(true);
-                                }else {
+                                } else {
                                     submit.setTextColor(Color.parseColor("#9E9393"));
                                     submit.setClickable(false);
                                 }
                             }
+
                             @Override
                             public void afterTextChanged(Editable s) {
                             }
@@ -388,15 +407,15 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                     @Override
                     public void onItemClick(int position) {
                         // chỗ này thì thêm bài hát vào playlist;
-                        PlayList selectedPlaylist =  PlaylistsRepository.getPlayLists().get(position);
-                        if(sharedPreferences == null) {
-                            sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
+                        PlayList selectedPlaylist = PlaylistsRepository.getPlayLists().get(position);
+                        if (sharedPreferences == null) {
+                            sharedPreferences = getSharedPreferences("my_preferences", MODE_PRIVATE);
                         }
-                        pli = new PlayListImp(sharedPreferences.getString("accessToken",""));
+                        pli = new PlayListImp(sharedPreferences.getString("accessToken", ""));
                         Music currentSong = getCurrentSong();
-                        pli.addMusicToPlaylist(selectedPlaylist.get_id(),selectedPlaylist.getName_list(),currentSong.get_id());
-                        Toast.makeText(getBaseContext(),"Đã thêm vào danh sách",Toast.LENGTH_SHORT).show();
-                        if(popupWindow != null) {
+                        pli.addMusicToPlaylist(selectedPlaylist.get_id(), selectedPlaylist.getName_list(), currentSong.get_id());
+                        Toast.makeText(getBaseContext(), "Đã thêm vào danh sách", Toast.LENGTH_SHORT).show();
+                        if (popupWindow != null) {
                             popupWindow.dismiss();
                         }
                     }
@@ -408,10 +427,9 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                 recyclerView.setAdapter(playListAdapter);
 
 
-
                 int width = LinearLayout.LayoutParams.MATCH_PARENT;
 //                int height = ViewGroup.LayoutParams.MATCH_PARENT;
-                popupWindow = new PopupWindow(view1,width, 1000, true);
+                popupWindow = new PopupWindow(view1, width, 1000, true);
 //
                 popupWindow.showAtLocation(v.getRootView(), Gravity.BOTTOM, 0, 0);
 
@@ -426,7 +444,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
 
 
                 SharedPreferences sharedPreferences = context.getSharedPreferences("my_preferences", Context.MODE_PRIVATE);
-                CommentImp commentImp =new CommentImp(sharedPreferences.getString("accessToken", "Not found"));
+                CommentImp commentImp = new CommentImp(sharedPreferences.getString("accessToken", "Not found"));
 
 
                 ArrayList<Comment> comment = commentImp.getComment(id_music);
@@ -443,7 +461,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                 ImageButton close = (ImageButton) view1.findViewById(R.id.imageClose);
                 int width = LinearLayout.LayoutParams.MATCH_PARENT;
                 int height = ViewGroup.LayoutParams.MATCH_PARENT;
-                popupWindow = new PopupWindow(view1,width, height, true);
+                popupWindow = new PopupWindow(view1, width, height, true);
                 popupWindow.showAtLocation(v.getRootView(), Gravity.BOTTOM, 0, 0);
                 close.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -452,23 +470,24 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                     }
                 });
 
-                EditText textCmt =(EditText) view1.findViewById(R.id.textComment);
+                EditText textCmt = (EditText) view1.findViewById(R.id.textComment);
                 Button btn_post = (Button) view1.findViewById(R.id.btnPostComment);
 
                 btn_post.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         String cmt = textCmt.getText().toString();
-                        if(cmt.isEmpty()){
-                            Toast.makeText(PlayerActivity.this,"Comment can't emty",Toast.LENGTH_SHORT).show();
-                        }else{
+                        if (cmt.isEmpty()) {
+                            Toast.makeText(PlayerActivity.this, "Comment can't emty", Toast.LENGTH_SHORT).show();
+                        } else {
                             SharedPreferences sharedPreferences = getSharedPreferences("my_preferences", MODE_PRIVATE);
-                            commentImp.create(id_music,cmt);
+                            commentImp.create(id_music, cmt);
+                            textCmt.setText("");
                         }
                     }
                 });
 
-                ImageButton imageButton =(ImageButton) item.findViewById(R.id.imageDelete);
+                ImageButton imageButton = (ImageButton) item.findViewById(R.id.imageDelete);
 
                 imageButton.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -477,7 +496,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
 
                         Comment cmt = comment.get(position);
 
-                        Toast.makeText(PlayerActivity.this,cmt.toString(),Toast.LENGTH_SHORT).show();
+                        Toast.makeText(PlayerActivity.this, cmt.toString(), Toast.LENGTH_SHORT).show();
 
                     }
                 });
@@ -503,8 +522,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                 if (mi.isDownloadedMusic(getCurrentSong().get_id())) {
                     download_btn.setImageResource(R.drawable.download_purple);
                 }
-            }
-            else {
+            } else {
                 Toast.makeText(getBaseContext(), "Bài hát đã được tải xuống thiết bị rồi", Toast.LENGTH_SHORT).show();
             }
         });
@@ -512,14 +530,14 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
             @Override
             public void onClick(View v) {
                 Music currentSong = getCurrentSong();
-                if(sharedPreferences == null) {
-                    sharedPreferences = getSharedPreferences("my_preferences",MODE_PRIVATE);
+                if (sharedPreferences == null) {
+                    sharedPreferences = getSharedPreferences("my_preferences", MODE_PRIVATE);
                 }
                 mi = new MusicImp(sharedPreferences);
                 mi.toggleLikeMusic(currentSong.get_id());
                 try {
                     setFavoriteImageSource();
-                }catch (JSONException e) {
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
@@ -543,6 +561,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
             }
         });
     }
+
     private void initViews() {
         song_name = (TextView) findViewById(R.id.music_playing_name);
         artist_name = (TextView) findViewById(R.id.music_playing_singer_name);
@@ -554,23 +573,25 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
         backBtn = (ImageButton) findViewById(R.id.back_btn);
         shuffleBtn = (ImageButton) findViewById(R.id.shuffle_music_btn);
         repeatBtn = (ImageButton) findViewById(R.id.repeat_music_btn);
-        playPauseBtn = (ImageButton) findViewById(R.id.pause_and_play) ;
+        playPauseBtn = (ImageButton) findViewById(R.id.pause_and_play);
         seekBar = (SeekBar) findViewById(R.id.seekBar);
-        playlist_btn = (ImageButton)  findViewById(R.id.playlist_btn);
+        playlist_btn = (ImageButton) findViewById(R.id.playlist_btn);
         download_btn = (ImageButton) findViewById(R.id.download_playing_music);
         add_playlist_btn = (ImageButton) findViewById(R.id.add_music_playing_to_playlist);
         like_playing_music = (ImageButton) findViewById(R.id.like_playing_music);
-        chat_btn =(ImageButton) findViewById(R.id.chat_btn);
+        chat_btn = (ImageButton) findViewById(R.id.chat_btn);
         player = (ConstraintLayout) findViewById(R.id.player);
     }
+
     private int findMusicInList(ArrayList<Music> list, Music m) {
-        for(int i= 0 ; i< list.size();i++) {
-            if(list.get(i).get_id().equals(m.get_id())) {
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i).get_id().equals(m.get_id())) {
                 return i;
             }
         }
         return -1;
     }
+
     private void setCurrentSong() {
         //set
         Picasso.get().load(getCurrentSong().getImage_music()).into(new Target() {
@@ -612,15 +633,27 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                 // Xử lý trước khi tải ảnh
             }
         });
+        if (mi.isDownloadedMusic(getCurrentSong().get_id())) {
+            download_btn.setImageResource(R.drawable.download_purple);
+        }else {
+            download_btn.setImageResource(R.drawable.download_white);
+        }
+        try {
+            setFavoriteImageSource();
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
         song_name.setText(getCurrentSong().getName_music());
         artist_name.setText(getCurrentSong().getName_singer());
         duration_total.setText(getCurrentSong().getTime_format());
         seekBar.setMax(musicService.getDuration());
     }
+
     private Music getCurrentSong() {
         return playlist.get(currentIndex);
     }
-    public static String convertToMMSS(String duration){
+
+    public static String convertToMMSS(String duration) {
         Long millis = Long.parseLong(duration);
         return String.format("%02d:%02d",
                 TimeUnit.MILLISECONDS.toMinutes(millis) % TimeUnit.HOURS.toMinutes(1),
@@ -629,35 +662,30 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
 
     @Override
     protected void onResume() {
-
         Intent intent = new Intent(this, MusicService.class);
-        bindService(intent,this,BIND_AUTO_CREATE);
-
+        bindService(intent, this, BIND_AUTO_CREATE);
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-
-        super.onPause();
+        Toast.makeText(this,"PAUSE",Toast.LENGTH_SHORT).show();
         unbindService(this);
+        super.onPause();
+
     }
 
 
-
     public void playPauseBtnClicked() {
-        if(musicService.isPlaying()) {
+        if (musicService.isPlaying()) {
             playPauseBtn.setImageResource(R.drawable.baseline_play_circle_24);
-//            setPlayPauseBtnImage(R.drawable.baseline_play_circle_dark_24);
             musicService.pause();
-        }else {
+        } else {
             playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
-//            setPlayPauseBtnImage(R.drawable.baseline_pause_circle_dark_24);
             musicService.start();
         }
         musicService.showNotification();
         seekBar.setMax(musicService.getDuration());
-
     }
 
 
@@ -671,13 +699,13 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
         musicService.OnCompleted();
         musicService.showNotification();
         playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
-
         setCurrentSong();
 
     }
 
 
     public void nextBtnClicked() {
+
         musicService.stop();
         musicService.reset();
         currentIndex = (currentIndex + 1) % listData.size();
@@ -699,21 +727,22 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
         mi.addToHistory(getCurrentSong().get_id());
         musicService.OnCompleted();
         musicService.showNotification();
+        MusicServiceRepo.setMusicService(musicService);
         setCurrentSong();
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-
         musicService = null;
     }
-    private void setFavoriteImageSource() throws JSONException {
-        if(sharedPreferences != null) {
-            Music currentSong = getCurrentSong();
-            JSONArray favoriteArray = new JSONArray(sharedPreferences.getString("favorite_list",""));
-            for(int i = 0 ;i < favoriteArray.length();i++) {
 
-                if(currentSong.get_id().equals(favoriteArray.getString(i))) {
+    private void setFavoriteImageSource() throws JSONException {
+        if (sharedPreferences != null) {
+            Music currentSong = getCurrentSong();
+            JSONArray favoriteArray = new JSONArray(sharedPreferences.getString("favorite_list", ""));
+            for (int i = 0; i < favoriteArray.length(); i++) {
+
+                if (currentSong.get_id().equals(favoriteArray.getString(i))) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -738,9 +767,8 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
 
     @Override
     protected void onDestroy() {
-        Toast.makeText(this,"DESTROY",Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "DESTROY", Toast.LENGTH_SHORT).show();
         super.onDestroy();
     }
-
 
 }

@@ -290,7 +290,6 @@ public class ZingChartAdapter extends RecyclerView.Adapter<ZingChartAdapter.View
                 Intent intent = new Intent(view.getContext(), PlayerActivity.class);
                 intent.putExtra("ListMusic",listdata);
                 intent.putExtra("currentIndex",position);
-                intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 view.getContext().startActivity(intent);
             }
         });

@@ -1,5 +1,7 @@
 package com.example.musicplayer.model.Comment;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import org.json.JSONArray;
@@ -116,6 +118,7 @@ public class CommentImp implements CommentDao{
                         if (!response.isSuccessful())
                             throw new IOException("Unexpected code " + response);
                         countDownLatch.countDown();
+                        
                     }
                 });
             }

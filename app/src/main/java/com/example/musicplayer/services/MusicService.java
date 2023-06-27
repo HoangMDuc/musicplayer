@@ -26,6 +26,8 @@ import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 
 import com.example.musicplayer.ActionPlaying;
+import com.example.musicplayer.FavoriteMusicActivity;
+import com.example.musicplayer.MusicServiceRepo;
 import com.example.musicplayer.NotificationReceiver;
 import com.example.musicplayer.PlayerActivity;
 import com.example.musicplayer.R;
@@ -43,7 +45,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private MediaPlayer mediaPlayer;
 
     SharedPreferences sharedPreferences;
-    Bitmap bitmap;
     MediaSessionCompat mediaSessionCompat;
     int position = -1;
 
@@ -53,9 +54,16 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     @Override
     public IBinder onBind(Intent intent) {
-        //Toast.makeText(getBaseContext(), "BIND",Toast.LENGTH_SHORT).show();
+        Toast.makeText(getBaseContext(), "BIND",Toast.LENGTH_SHORT).show();
         return mBinder;
     }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        Toast.makeText(getBaseContext(), "UNBIND",Toast.LENGTH_SHORT).show();
+        return super.onUnbind(intent);
+    }
+
     public  void OnCompleted() {
         mediaPlayer.setOnCompletionListener(this);
     }
@@ -89,7 +97,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         String actionName = intent.getStringExtra("ActionName");
         if(actionName != null && actionName.equals("ACTION_PLAY_NEW_MUSIC")) {
             int myPosition = intent.getIntExtra("currentIndex",-1);
@@ -99,7 +106,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             if(myPosition != - 1) {
                 playMedia(myPosition);
             }
-            putLastPlayedToSharePreferences();
+
         }else {
             if(actionName != null) {
                 switch (actionName) {
@@ -115,7 +122,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                     case ACTION_CLOSE:
                         hiddenNotification();
                         mediaPlayer.stop();
-
                         break;
                 }
             }
@@ -148,6 +154,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             create(position);
             mediaPlayer.start();
         }
+      //  putLastPlayedToSharePreferences();
         showNotification();
     }
 
@@ -185,7 +192,8 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-//        putLastPlayedToSharePreferences();
+        MusicServiceRepo.setCurrentIndex(position);
+        putLastPlayedToSharePreferences();
     }
 
     public boolean isPlaying() {
@@ -200,15 +208,16 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
     public void showNotification(){
-//// Create an Intent for the activity you want to start
-//        Intent resultIntent = new Intent(this, PlayerActivity.class);
-//// Create the TaskStackBuilder and add the intent, which inflates the back stack
-//        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-//        stackBuilder.addNextIntentWithParentStack(resultIntent);
-//// Get the PendingIntent containing the entire back stack
-//        PendingIntent resultPendingIntent =
-//                stackBuilder.getPendingIntent(0,
-//                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+// Create an Intent for the activity you want to start
+        Intent resultIntent = new Intent(this, PlayerActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+// Create the TaskStackBuilder and add the intent, which inflates the back stack
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addNextIntentWithParentStack(resultIntent);
+// Get the PendingIntent containing the entire back stack
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(0,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Intent prevIntent = new Intent(this, NotificationReceiver.class)
                 .setAction(ACTION_PREVIOUS);
         PendingIntent prevPending =  PendingIntent.getBroadcast(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -230,7 +239,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 Notification notification = new NotificationCompat.Builder(getBaseContext(),CHANNEL_ID)
                         .setLargeIcon(bitmap)
                         .setSmallIcon(playPauseBtn)
-//                        .setContentIntent(resultPendingIntent)
+                        .setContentIntent(resultPendingIntent)
                         .setContentTitle(getCurrentSong().getName_music())
                         .setContentText(getCurrentSong().getName_singer())
                         .addAction(R.drawable.baseline_skip_previous_24,"Previous",prevPending)
@@ -275,12 +284,14 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public void nextMusic() {
         if(actionPlaying != null) {
             actionPlaying.nextBtnClicked();
+            //putLastPlayedToSharePreferences();
         }
     }
 
     public void pauseAndPlay() {
         if(actionPlaying != null) {
             actionPlaying.playPauseBtnClicked();
+          // putLastPlayedToSharePreferences();
         }
     }
 

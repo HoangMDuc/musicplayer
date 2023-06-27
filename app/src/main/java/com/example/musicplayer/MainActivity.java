@@ -3,6 +3,7 @@ package com.example.musicplayer;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ActivityManager;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
@@ -27,6 +28,8 @@ import com.example.musicplayer.model.Music.MusicImp;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
     SharedPreferences sharedPreferences, lastPlayedSP;
 
@@ -46,7 +49,11 @@ public class MainActivity extends AppCompatActivity {
 //        if (savedInstanceState == null) {
 //
 //        }
-
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.AppTask> appTasks = activityManager.getAppTasks();
+        for(ActivityManager.AppTask a : appTasks) {
+            Log.d("test-main:",a.getTaskInfo().toString());
+        }
         sharedPreferences = getSharedPreferences("my_preferences", MODE_PRIVATE);
         if(!sharedPreferences.contains("isLogin")) {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -144,5 +151,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    @Override
+    protected void onNewIntent(Intent intent) {
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.AppTask> appTasks = activityManager.getAppTasks();
+        for(ActivityManager.AppTask a : appTasks) {
+            Log.d("test-main-on-new-intent:",a.getTaskInfo().toString());
+        }
+        super.onNewIntent(intent);
+    }
 }
