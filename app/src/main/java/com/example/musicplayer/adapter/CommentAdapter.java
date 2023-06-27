@@ -1,8 +1,16 @@
 package com.example.musicplayer.adapter;
 
+import android.app.Dialog;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -13,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.musicplayer.R;
 import com.example.musicplayer.model.Comment.Comment;
+import com.example.musicplayer.model.Comment.CommentImp;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -21,6 +30,8 @@ import java.util.ArrayList;
 public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentViewHolder> {
 
     private ArrayList<Comment> commentList;
+    private CommentImp commentImp;
+    String id_music;
 //    private static OnItemClickListener listener;
     private int selectedPosition = RecyclerView.NO_POSITION;
     private static int currentPosition;
@@ -43,8 +54,10 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     }
 
 
-    public CommentAdapter(ArrayList<Comment> commentList) {
+    public CommentAdapter(ArrayList<Comment> commentList, CommentImp commentImp,String id_music) {
         this.commentList = commentList;
+        this.commentImp =commentImp;
+        this.id_music = id_music;
     }
 
     @NonNull
@@ -65,7 +78,64 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         if (comment == null) {
             return;
         }
-        holder.btn_delete.setTag(position);
+        holder.btn_delete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                commentImp.delete(comment.getId_comment());
+                updateData(commentImp.getComment(id_music));
+            }
+        });
+
+        holder.btn_edit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Dialog dialog = new Dialog(v.getContext());
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                dialog.setContentView(R.layout.popup_form_cmt);
+
+                Window window = dialog.getWindow();
+
+                if(window == null){
+                    return;
+                }
+                window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+                window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                WindowManager.LayoutParams windowActributes = window.getAttributes();
+                windowActributes.gravity = Gravity.CENTER;
+                window.setAttributes(windowActributes);
+
+                if(Gravity.BOTTOM == Gravity.CENTER){
+                    dialog.setCancelable(true);
+                }else {
+                    dialog.setCancelable(false);
+                }
+
+                ImageButton btnExit = dialog.findViewById(R.id.imageExit1);
+
+                btnExit.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                    }
+                });
+
+                dialog.show();
+
+                EditText cmtUP= (EditText) dialog.findViewById(R.id.editCmt);
+                cmtUP.setText(comment.getContent());
+
+                Button up_btn =(Button) dialog.findViewById(R.id.buttonSubmitUp);
+
+                up_btn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        commentImp.update(comment.getId_comment(), cmtUP.getText().toString());
+                        updateData(commentImp.getComment(id_music));
+                    }
+                });
+
+            }
+        });
 
         holder.textViewUserName.setText(comment.getUser_name());
         holder.textViewContent.setText(comment.getContent());
@@ -85,6 +155,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         TextView textViewContent;
 
         ImageButton btn_delete;
+        ImageButton btn_edit;
         ConstraintLayout constraintLayout;
 
         public ImageView getImageViewAvatar() {
@@ -125,7 +196,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             textViewUserName = (TextView) itemView.findViewById(R.id.user_name);
             textViewContent =(TextView) itemView.findViewById(R.id.content);
             btn_delete = (ImageButton) itemView.findViewById(R.id.imageDelete);
-
+            btn_edit =(ImageButton) itemView.findViewById(R.id.imageUpdate);
         }
 
 
@@ -133,10 +204,14 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             return currentPosition;
         }
     }
-
-
+    public void updateData(ArrayList<Comment> newData) {
+        commentList.clear();
+        commentList.addAll(newData);
+        notifyDataSetChanged();
+    }
 
 }
+
 
 
 

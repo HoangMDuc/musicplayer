@@ -452,7 +452,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                 LayoutInflater inflater = (LayoutInflater) v.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 View view1 = inflater.inflate(R.layout.comment_list, null);
                 View item = inflater.inflate(R.layout.comment_item, null);
-                CommentAdapter commentAdapter = new CommentAdapter(comment);
+                CommentAdapter commentAdapter = new CommentAdapter(comment,commentImp,id_music);
 
                 RecyclerView recyclerView = (RecyclerView) view1.findViewById(R.id.recyclerViewComment);
                 recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
@@ -483,23 +483,11 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                             SharedPreferences sharedPreferences = getSharedPreferences("my_preferences", MODE_PRIVATE);
                             commentImp.create(id_music, cmt);
                             textCmt.setText("");
+                            commentAdapter.updateData(commentImp.getComment(id_music));
                         }
                     }
                 });
 
-                ImageButton imageButton = (ImageButton) item.findViewById(R.id.imageDelete);
-
-                imageButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        int position = (int) v.getTag();
-
-                        Comment cmt = comment.get(position);
-
-                        Toast.makeText(PlayerActivity.this, cmt.toString(), Toast.LENGTH_SHORT).show();
-
-                    }
-                });
             }
         });
         download_btn.setOnClickListener(v -> {
