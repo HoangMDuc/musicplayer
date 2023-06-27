@@ -1,5 +1,7 @@
 package com.example.musicplayer.adapter;
 
+import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +10,7 @@ import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.musicplayer.R;
@@ -18,7 +21,8 @@ import java.util.ArrayList;
 
 public class PlayerSongAdapter extends RecyclerView.Adapter<PlayerSongAdapter.ViewHolder> {
     private ArrayList<Music> listData ;
-    private PopupWindow popupWindow;
+//    private String music_id;
+//    Context context;
     private OnItemClickListener  listener;
     public interface OnItemClickListener {
         void onItemClick(int position);
@@ -34,6 +38,8 @@ public class PlayerSongAdapter extends RecyclerView.Adapter<PlayerSongAdapter.Vi
     }
     public PlayerSongAdapter(ArrayList<Music> listData) {
         this.listData = listData;
+//        this.context = context;
+//        this.music_id = id;
     }
 
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -50,8 +56,8 @@ public class PlayerSongAdapter extends RecyclerView.Adapter<PlayerSongAdapter.Vi
         holder.song_name.setText(myMusic.getName_music());
         holder.singer_name.setText(myMusic.getName_singer());
         holder.music_order.setText(position + 1 + "");
-
         Picasso.get().load(myMusic.getImage_music()).into(holder.music_image);
+
         holder.constraintLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

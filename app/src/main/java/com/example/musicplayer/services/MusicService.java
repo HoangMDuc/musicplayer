@@ -8,6 +8,7 @@ import static com.example.musicplayer.ApplicationClass.CHANNEL_ID;
 import static com.example.musicplayer.PlayerActivity.isRepeat;
 import static com.example.musicplayer.PlayerActivity.playlist;
 
+
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -40,7 +41,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 
-public class MusicService extends Service implements MediaPlayer.OnCompletionListener{
+public class MusicService extends Service {
     IBinder mBinder  = new MyBinder();
     private MediaPlayer mediaPlayer;
 
@@ -48,40 +49,24 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     MediaSessionCompat mediaSessionCompat;
     int position = -1;
 
-    ActionPlaying actionPlaying;
-    ArrayList<Music> listMusics = new ArrayList<>();
+//    ActionPlaying actionPlaying;
+    ArrayList<Music> listMusics ;
 
 
     @Override
     public IBinder onBind(Intent intent) {
-        Toast.makeText(getBaseContext(), "BIND",Toast.LENGTH_SHORT).show();
+       // Toast.makeText(getBaseContext(), "BIND",Toast.LENGTH_SHORT).show();
         return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        Toast.makeText(getBaseContext(), "UNBIND",Toast.LENGTH_SHORT).show();
+       // Toast.makeText(getBaseContext(), "UNBIND",Toast.LENGTH_SHORT).show();
         return super.onUnbind(intent);
     }
 
-    public  void OnCompleted() {
-        mediaPlayer.setOnCompletionListener(this);
-    }
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        if(isRepeat) {
-            mediaPlayer.start();
-        }else {
-            if(actionPlaying != null ){
-                actionPlaying.nextBtnClicked();
-                if(mediaPlayer != null) {
-                    create(position);
-                    mediaPlayer.start();
-                    OnCompleted();
-                }
-            }
-        }
-    }
+
+
 
     public class MyBinder extends Binder {
         public MusicService getMusicService() {
@@ -100,10 +85,8 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         String actionName = intent.getStringExtra("ActionName");
         if(actionName != null && actionName.equals("ACTION_PLAY_NEW_MUSIC")) {
             int myPosition = intent.getIntExtra("currentIndex",-1);
-            if(playlist != null) {
-                setListMusics(playlist);
-            }
-            if(myPosition != - 1) {
+            playlist  = (ArrayList<Music>) intent.getSerializableExtra("playlist");
+            if(myPosition != - 1 && playlist != null) {
                 playMedia(myPosition);
             }
 
@@ -121,21 +104,19 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                         break;
                     case ACTION_CLOSE:
                         hiddenNotification();
-                        mediaPlayer.stop();
+                        mediaPlayer.pause();
+                        mediaPlayer.seekTo(0);
+                        Intent intent1 = new Intent()
+                                .setAction("com.example.app.HIDDEN_NOTIFICATION");
+                        sendBroadcast(intent1);
                         break;
                 }
             }
         }
-
-
         return START_STICKY;
     }
 
-    private void previousMusic() {
-        if(actionPlaying != null) {
-            actionPlaying.prevBtnClicked();
-        }
-    }
+
 
     public void setListMusics(ArrayList<Music> listMusics) {
         this.listMusics = listMusics;
@@ -192,6 +173,17 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                if(isRepeat) {
+                    mediaPlayer.start();
+                }else {
+                    nextMusic();
+
+                }
+            }
+        });
         MusicServiceRepo.setCurrentIndex(position);
         putLastPlayedToSharePreferences();
     }
@@ -199,9 +191,8 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public boolean isPlaying() {
         return mediaPlayer.isPlaying();
     }
-    public void setCallback(ActionPlaying actionPlaying) {
-        this.actionPlaying = actionPlaying;
-    }
+    public boolean isReadyToPlay() {return mediaPlayer != null;}
+
 
     public Music getCurrentSong() {
         return listMusics.get(position);
@@ -231,6 +222,8 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         Intent closeIntent = new Intent(this, NotificationReceiver.class)
                 .setAction(ACTION_CLOSE);
         PendingIntent closePending = PendingIntent.getBroadcast(this,0, closeIntent,PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        Log.d("Currentindex sv", position + "");
+        Log.d("LM",listMusics.size() + "");
         Picasso.get().load(listMusics.get(position).getImage_music()).into(new Target() {
             @Override
             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
@@ -282,17 +275,41 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
     public void nextMusic() {
-        if(actionPlaying != null) {
-            actionPlaying.nextBtnClicked();
-            //putLastPlayedToSharePreferences();
-        }
+        Intent intent = new Intent("com.example.app.NEXT_SONG");
+        sendBroadcast(intent);
+        stop();
+        reset();
+        position = (position + 1) % listMusics.size();
+        create(position);
+        start();
+        //mi.addToHistory(getCurrentSong().get_id());
+
+        showNotification();
     }
 
     public void pauseAndPlay() {
-        if(actionPlaying != null) {
-            actionPlaying.playPauseBtnClicked();
-          // putLastPlayedToSharePreferences();
+        Intent intent = new Intent("com.example.app.PLAY_OR_PAUSE");
+        sendBroadcast(intent);
+
+        if(mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+        }else {
+            mediaPlayer.start();
         }
+        showNotification();
+    }
+    public void previousMusic() {
+        Intent intent = new Intent("com.example.app.PREVIOUS_SONG");
+        sendBroadcast(intent);
+
+        stop();
+        reset();
+        position = (position - 1 + listMusics.size()) % listMusics.size();
+        create(position);
+        start();
+        //mi.addToHistory(getCurrentSong().get_id());
+
+        showNotification();
     }
 
 }

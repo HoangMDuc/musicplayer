@@ -22,6 +22,7 @@ import com.example.musicplayer.custom_fragment.ExploreFragment;
 import com.example.musicplayer.custom_fragment.HeaderFragment;
 import com.example.musicplayer.custom_fragment.HomeFragment;
 //import com.example.musicplayer.custom_fragment.MiniPlayerFragment;
+import com.example.musicplayer.custom_fragment.MiniPlayerFragment;
 import com.example.musicplayer.custom_fragment.ZingChartFragment;
 import com.example.musicplayer.model.Music.Music;
 import com.example.musicplayer.model.Music.MusicImp;
@@ -40,20 +41,16 @@ public class MainActivity extends AppCompatActivity {
     com.example.musicplayer.custom_fragment.HeaderFragment HeaderFragment;
     ZingChartFragment zingChartFragment;
     ExploreFragment exploreFragment;
-//    MiniPlayerFragment miniPlayerFragment;
+    MiniPlayerFragment miniPlayerFragment;
     FrameLayout frameLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        Log.d("MUSIC_SV",MusicServiceRepo.getMusicService() + "");
 //        if (savedInstanceState == null) {
 //
 //        }
-        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.AppTask> appTasks = activityManager.getAppTasks();
-        for(ActivityManager.AppTask a : appTasks) {
-            Log.d("test-main:",a.getTaskInfo().toString());
-        }
+
         sharedPreferences = getSharedPreferences("my_preferences", MODE_PRIVATE);
         if(!sharedPreferences.contains("isLogin")) {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -111,6 +108,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
+        SharedPreferences sharedPreferences1 = getSharedPreferences("LAST_PLAYED",MODE_PRIVATE);
+        if(sharedPreferences1.contains("position") && sharedPreferences1.contains("listMusics")) {
+            miniPlayerFragment = new MiniPlayerFragment();
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.mini_player,miniPlayerFragment,"Mini Player")
+                    .addToBackStack(null)
+                    .commit();
+        }
 
         super.onResume();
     }
@@ -151,13 +156,4 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.AppTask> appTasks = activityManager.getAppTasks();
-        for(ActivityManager.AppTask a : appTasks) {
-            Log.d("test-main-on-new-intent:",a.getTaskInfo().toString());
-        }
-        super.onNewIntent(intent);
-    }
 }

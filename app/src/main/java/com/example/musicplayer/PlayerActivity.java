@@ -15,9 +15,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -67,7 +69,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-public class PlayerActivity extends AppCompatActivity implements ServiceConnection, ActionPlaying {
+public class PlayerActivity extends AppCompatActivity implements ServiceConnection {
     TextView song_name, artist_name, duration_played, duration_total;
     ShapeableImageView cover_art;
     ImageButton nextBtn, prevBtn, backBtn, shuffleBtn, repeatBtn, playPauseBtn;
@@ -82,10 +84,40 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
     private PlayListAdapter playListAdapter;
     public static ArrayList<Music> listData;
     int currentIndex = -1;
-    Thread playThread, nextThread, prevThread;
     MusicService musicService = MusicServiceRepo.getMusicService();
     SharedPreferences sharedPreferences;
     public static boolean isShuffle = false, isRepeat = false;
+    private BroadcastReceiver controlSongReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Cập nhật giao diện bài hát hiện tại
+            if(musicService != null) {
+                String action = intent.getAction();
+                switch (action) {
+                    case "com.example.app.PREVIOUS_SONG":
+                        currentIndex = (currentIndex-1 + playlist.size()) % playlist.size();
+                        break;
+                    case "com.example.app.NEXT_SONG":
+                        currentIndex = (currentIndex+1) % playlist.size();
+                        break;
+                    case "com.example.app.PLAY_OR_PAUSE":
+                        if(musicService.isPlaying()) {
+                            playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
+                        }else {
+                            playPauseBtn.setImageResource(R.drawable.baseline_play_circle_24);
+                        }
+                        break;
+                    case "com.example.app.HIDDEN_NOTIFICATION":
+                        playPauseBtn.setImageResource(R.drawable.baseline_play_circle_24);
+                        duration_played.setText(convertToMMSS(musicService.getCurrentPosition() + ""));
+                        seekBar.setProgress(0);
+                        break;
+
+                }
+                setCurrentSong();
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +127,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
         sharedPreferences = getSharedPreferences("my_preferences", MODE_PRIVATE);
         isShuffle = sharedPreferences.getBoolean("isRandom", false);
         isRepeat = sharedPreferences.getBoolean("isRepeat", false);
-        Log.d("MS", (musicService == null) + "");
+        //Log.d("MS", (MusicServiceRepo.getMusicService() ) + " " + (musicService == null) + " " + musicService.isReadyToPlay());
         mi = new MusicImp(sharedPreferences);
         if (musicService == null) {
             listData = (ArrayList<Music>) getIntent().getSerializableExtra("ListMusic");
@@ -103,54 +135,75 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
             if (listData != null) {
                 playlist = new ArrayList<>(listData);
             }
-
+            if (isShuffle) {
+                Music currentSong = listData.get(currentIndex);
+                int currentSongInPlaylist = findMusicInList(playlist, currentSong);
+                playlist.remove(currentSongInPlaylist);
+                Collections.shuffle(playlist);
+                playlist.add(0, currentSong);
+                currentIndex = 0;
+                shuffleBtn.setImageResource(R.drawable.baseline_shuffle_on_24);
+            }
+            if (isRepeat) {
+                repeatBtn.setImageResource(R.drawable.baseline_repeat_one_24);
+            }
             Intent intent = new Intent(this, MusicService.class);
             intent.putExtra("currentIndex", currentIndex);
+            intent.putExtra("playlist",playlist);
             intent.putExtra("ActionName", ACTION_PLAY_NEW_MUSIC);
             startService(intent);
-        } else {
+        }
+        else {
             if (getIntent().hasExtra("currentIndex")) {
-                musicService.stop();
-                musicService.reset();
+                if(musicService.isReadyToPlay() ) {
+                    musicService.stop();
+                    musicService.reset();
+                }
                 listData = (ArrayList<Music>) getIntent().getSerializableExtra("ListMusic");
                 currentIndex = getIntent().getIntExtra("currentIndex", -1);
                 if (listData != null) {
                     playlist = new ArrayList<>(listData);
                 }
+                if (isShuffle) {
+                    Music currentSong = listData.get(currentIndex);
+                    int currentSongInPlaylist = findMusicInList(playlist, currentSong);
+                    playlist.remove(currentSongInPlaylist);
+                    Collections.shuffle(playlist);
+                    playlist.add(0, currentSong);
+                    currentIndex = 0;
+                    shuffleBtn.setImageResource(R.drawable.baseline_shuffle_on_24);
+                }
+                if (isRepeat) {
+                    repeatBtn.setImageResource(R.drawable.baseline_repeat_one_24);
+                }
+                MusicServiceRepo.setListData(listData);
+                MusicServiceRepo.setPlaylist(playlist);
+                MusicServiceRepo.setCurrentIndex(currentIndex);
+
                 musicService.create(currentIndex);
                 musicService.start();
                 mi.addToHistory(getCurrentSong().get_id());
-                musicService.OnCompleted();
                 musicService.showNotification();
                 playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
                 setCurrentSong();
             } else {
+                if (isShuffle) {
+                    shuffleBtn.setImageResource(R.drawable.baseline_shuffle_on_24);
+                }
+                if (isRepeat) {
+                    repeatBtn.setImageResource(R.drawable.baseline_repeat_one_24);
+                }
+                if(musicService.isPlaying()) {
+                    playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
+                }else {
+                    playPauseBtn.setImageResource(R.drawable.baseline_play_circle_24);
+                }
                 listData = MusicServiceRepo.getListData();
                 playlist = MusicServiceRepo.getPlaylist();
                 currentIndex = MusicServiceRepo.getCurrentIndex();
                 setCurrentSong();
             }
-
-
         }
-//        if (mi.isDownloadedMusic(getCurrentSong().get_id())) {
-//            download_btn.setImageResource(R.drawable.download_purple);
-//        }
-        if (isShuffle) {
-            Music currentSong = listData.get(currentIndex);
-            int currentSongInPlaylist = findMusicInList(playlist, currentSong);
-            playlist.remove(currentSongInPlaylist);
-            Collections.shuffle(playlist);
-            playlist.add(0, currentSong);
-            currentIndex = 0;
-            shuffleBtn.setImageResource(R.drawable.baseline_shuffle_on_24);
-        }
-        if (isRepeat) {
-            repeatBtn.setImageResource(R.drawable.baseline_repeat_one_24);
-        }
-        MusicServiceRepo.setListData(listData);
-        MusicServiceRepo.setPlaylist(playlist);
-        MusicServiceRepo.setCurrentIndex(currentIndex);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -198,7 +251,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                     playlist = new ArrayList<>(listData);
                     shuffleBtn.setImageResource(R.drawable.baseline_shuffle_24);
                 }
-                musicService.setListMusics(playlist);
+                MusicServiceRepo.setPlaylist(playlist);
                 if (sharedPreferences != null) {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putBoolean("isRandom", isShuffle);
@@ -664,13 +717,20 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
     protected void onResume() {
         Intent intent = new Intent(this, MusicService.class);
         bindService(intent, this, BIND_AUTO_CREATE);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("com.example.app.PREVIOUS_SONG");
+        intentFilter.addAction("com.example.app.NEXT_SONG");
+        intentFilter.addAction("com.example.app.PLAY_OR_PAUSE");
+        intentFilter.addAction("com.example.app.HIDDEN_NOTIFICATION");
+        registerReceiver(controlSongReceiver,intentFilter);
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        Toast.makeText(this,"PAUSE",Toast.LENGTH_SHORT).show();
+
         unbindService(this);
+        unregisterReceiver(controlSongReceiver);
         super.onPause();
 
     }
@@ -679,55 +739,50 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
     public void playPauseBtnClicked() {
         if (musicService.isPlaying()) {
             playPauseBtn.setImageResource(R.drawable.baseline_play_circle_24);
-            musicService.pause();
         } else {
             playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
-            musicService.start();
         }
-        musicService.showNotification();
+        musicService.pauseAndPlay();
         seekBar.setMax(musicService.getDuration());
     }
-
-
     public void prevBtnClicked() {
-        musicService.stop();
-        musicService.reset();
-        currentIndex = (currentIndex - 1 + listData.size()) % listData.size();
-        musicService.create(currentIndex);
-        musicService.start();
-        //mi.addToHistory(getCurrentSong().get_id());
-        musicService.OnCompleted();
-        musicService.showNotification();
+//        musicService.stop();
+//        musicService.reset();
+//        currentIndex = (currentIndex - 1 + listData.size()) % listData.size();
+//        musicService.create(currentIndex);
+//        musicService.start();
+//          mi.addToHistory(getCurrentSong().get_id());
+//        musicService.OnCompleted();
+//        musicService.showNotification();
+        musicService.previousMusic();
         playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
         setCurrentSong();
 
     }
-
-
     public void nextBtnClicked() {
-
-        musicService.stop();
-        musicService.reset();
-        currentIndex = (currentIndex + 1) % listData.size();
-        musicService.create(currentIndex);
-        musicService.start();
-        //mi.addToHistory(getCurrentSong().get_id());
-        musicService.OnCompleted();
-        musicService.showNotification();
+//        musicService.stop();
+//        musicService.reset();
+//        currentIndex = (currentIndex + 1) % listData.size();
+//        musicService.create(currentIndex);
+//        musicService.start();
+//        //mi.addToHistory(getCurrentSong().get_id());
+//        musicService.OnCompleted();
+//        musicService.showNotification();
+        musicService.nextMusic();
         playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
         setCurrentSong();
-
     }
-
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
         MusicService.MyBinder myBinder = (MusicService.MyBinder) service;
         musicService = myBinder.getMusicService();
-        musicService.setCallback(this);
+        Log.d("onServiceConnected",(musicService != null) + "");
         mi.addToHistory(getCurrentSong().get_id());
-        musicService.OnCompleted();
         musicService.showNotification();
         MusicServiceRepo.setMusicService(musicService);
+        MusicServiceRepo.setListData(listData);
+        MusicServiceRepo.setPlaylist(playlist);
+        MusicServiceRepo.setCurrentIndex(currentIndex);
         setCurrentSong();
     }
 

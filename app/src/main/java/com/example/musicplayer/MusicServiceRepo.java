@@ -37,6 +37,9 @@ public class MusicServiceRepo   {
 
     public static void setPlaylist(ArrayList<Music> playlist) {
         MusicServiceRepo.playlist = playlist;
+        if(musicService != null) {
+            musicService.setListMusics(playlist);
+        }
     }
 
     public static void setListData(ArrayList<Music> listData) {
