@@ -97,7 +97,7 @@ public class PlayListSongAdapter extends RecyclerView.Adapter<PlayListSongAdapte
         if (mi.isDownloadedMusic(myMusic.get_id())){
             holder.download_img.setImageResource(R.drawable.download_purple);
         } else {
-            holder.download_img.setImageResource(R.drawable.download_white);
+            holder.download_img.setImageResource(R.drawable.download_black);
         }
 
         holder.constraintLayout.setOnClickListener(new View.OnClickListener() {
@@ -313,6 +313,7 @@ public class PlayListSongAdapter extends RecyclerView.Adapter<PlayListSongAdapte
                                TextView no_music = viewGroup.findViewById(R.id.no_music_tv);
                                no_music.setVisibility(View.VISIBLE);
                            }
+                           popupWindow.dismiss();
                        }
                     }
                 });
