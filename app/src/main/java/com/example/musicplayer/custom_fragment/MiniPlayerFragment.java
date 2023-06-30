@@ -159,9 +159,17 @@ public class MiniPlayerFragment extends Fragment implements ServiceConnection {
         miniPlayer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent resultIntent = new Intent(getContext(), PlayerActivity.class)
-                        .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(resultIntent);
+                if(musicService != null && musicService.isReadyToPlay()) {
+                    Intent resultIntent = new Intent(getContext(), PlayerActivity.class)
+                            .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(resultIntent);
+                }else {
+                    Intent resultIntent = new Intent(getContext(), PlayerActivity.class)
+                            .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    resultIntent.putExtra("currentIndex",currentIndex);
+                    resultIntent.putExtra("ListMusic",listMusics);
+                    startActivity(resultIntent);
+                }
             }
         });
         return view;

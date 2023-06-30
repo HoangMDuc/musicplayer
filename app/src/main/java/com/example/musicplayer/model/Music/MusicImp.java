@@ -253,9 +253,11 @@ public class MusicImp implements MusicDao{
                 .url(getFavoriteUrl)
                 .header("Authorization","Bearer " +  sharedPreferences.getString("accessToken",""))
                 .build();
+
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
+
                 e.printStackTrace();
                 future.completeExceptionally(e);
             }

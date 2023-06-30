@@ -193,7 +193,7 @@ public class PlayerActivity extends AppCompatActivity implements ServiceConnecti
                 if (isRepeat) {
                     repeatBtn.setImageResource(R.drawable.baseline_repeat_one_24);
                 }
-                if(musicService.isPlaying()) {
+                if(musicService.isReadyToPlay() && musicService.isPlaying()) {
                     playPauseBtn.setImageResource(R.drawable.baseline_pause_circle_24);
                 }else {
                     playPauseBtn.setImageResource(R.drawable.baseline_play_circle_24);
